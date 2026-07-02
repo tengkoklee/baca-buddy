@@ -176,3 +176,6 @@ const CARE_ITEMS = {
   toy:   { emoji: '🎾', name: 'toy',   hearts: 2 },
   gift:  { emoji: '🎁', name: 'gift',  hearts: 3 }
 };
+
+/* animated pixel sprite (Gen-5 battle idle animation) — the wandering companion */
+const POKE_ANI = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`;

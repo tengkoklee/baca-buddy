@@ -441,17 +441,39 @@ body.dys {
 /* ---------- muted warning ---------- */
 #soundBtn.muted { background: var(--soft-bg); border-color: var(--soft); }
 
-/* ---------- wandering companion ---------- */
+/* ---------- wandering companion (walks along the bottom of the screen) ---------- */
 .companion {
-  position: fixed; top: 0; left: 0; z-index: 40;
+  position: fixed; bottom: 6px; left: 0; z-index: 40;
   pointer-events: none;                    /* only the sprite itself is tappable */
   will-change: transform;
+  display: flex; flex-direction: column; align-items: center;
 }
 .companion img {
-  width: 84px; height: 84px; object-fit: contain;
+  height: 88px; width: auto; max-width: 130px; object-fit: contain;
+  image-rendering: pixelated;              /* crisp pixel-art sprite, scaled up */
   pointer-events: auto; cursor: pointer;
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,.2));
+  position: relative; z-index: 1;
 }
+.companion img.static-fallback { height: 74px; image-rendering: auto; }
+.companion .shadow {
+  width: 54px; height: 12px; margin-top: -8px;
+  background: rgba(58, 53, 44, .22);
+  border-radius: 50%;
+  filter: blur(1px);
+}
+/* footstep bob while walking (the gif itself supplies the idle animation) */
+.companion.walking img { animation: walkbob .32s ease-in-out infinite alternate; }
+@keyframes walkbob { from { translate: 0 0; } to { translate: 0 -4px; } }
+/* happy hop */
+.companion.hopping img { animation: comphop .65s cubic-bezier(.3,0,.4,1); }
+@keyframes comphop {
+  0%, 100% { translate: 0 0; }
+  40% { translate: 0 -44px; }
+  70% { translate: 0 0; }
+  85% { translate: 0 -12px; }
+}
+.companion.hopping .shadow { animation: shadowshrink .65s ease; }
+@keyframes shadowshrink { 40% { transform: scale(.55); opacity: .5; } }
 
 /* ---------- personal greeting ---------- */
 .greet {

@@ -392,40 +392,80 @@ async function evolveCeremony(fromMon, toMon, p) {
 }
 
 /* =========================================================================
-   🚶 WANDERING COMPANION — the chosen pal strolls around the screen
-   Gentle random walk in the lower half; tap it → it cheers and hops away.
+   🚶 WANDERING COMPANION — a LIVING character, not a floating icon.
+   Uses the animated Gen-5 pixel sprite (tail flicks, wing flaps…), walks
+   along the bottom of the screen like it's on the floor — with a shadow,
+   turning to face its direction, idle pauses, and the occasional hop.
+   Tap it → it cheers Jayden on, then scampers off.
    ========================================================================= */
-let compTimer = null;
-let compX = 0;
+const WALK_SPEED = 75;                  // px per second — an amble, not a glide
+let compTimer = null;                   // next-action timer
+let compX = 24;                         // current floor position
+let compWalking = false;
 
 function updateCompanion() {
   const el = $('companion'); if (!el) return;
   const p = petInfo(rwState());
   if (!p) {
     el.style.display = 'none';
-    if (compTimer) { clearInterval(compTimer); compTimer = null; }
+    if (compTimer) { clearTimeout(compTimer); compTimer = null; }
     return;
   }
   const img = el.querySelector('img');
-  const art = POKE_ART(p.mon.id);
-  if (!img.src.endsWith(`/${p.mon.id}.png`)) img.src = art;
+  const want = POKE_ANI(p.mon.id);
+  if (img.dataset.monId !== String(p.mon.id)) {
+    img.dataset.monId = p.mon.id;
+    img.src = want;                                        // animated pixel sprite
+    img.onerror = () => {                                  // rare miss → static art, smaller
+      img.onerror = null;
+      img.src = POKE_ART(p.mon.id);
+      img.classList.add('static-fallback');
+    };
+  }
   if (el.style.display === 'none') {
     el.style.display = '';
-    wanderCompanion(true);                 // appear somewhere sensible immediately
+    el.style.transition = 'none';
+    compX = 24 + Math.random() * (window.innerWidth * 0.5);
+    el.style.transform = `translateX(${compX}px)`;
   }
-  if (!compTimer) compTimer = setInterval(wanderCompanion, 6500);
+  if (!compTimer) companionLoop();
 }
 
-function wanderCompanion(jump = false) {
+/* the behaviour brain: walk / idle / hop, then think again */
+function companionLoop() {
   const el = $('companion');
-  if (!el || el.style.display === 'none' || document.visibilityState !== 'visible') return;
-  const W = window.innerWidth, H = window.innerHeight;
-  const x = 8 + Math.random() * Math.max(60, W - 100);
-  const y = H * 0.55 + Math.random() * Math.max(40, H * 0.4 - 100);
-  el.style.transition = jump ? 'none' : 'transform 3.6s ease-in-out';
-  el.style.transform = `translate(${x}px, ${y}px)`;
-  el.querySelector('img').style.transform = x > compX ? 'scaleX(-1)' : '';   // face the way it walks
+  if (!el || el.style.display === 'none') { compTimer = null; return; }
+  let waitMs = 1200 + Math.random() * 1800;                // default: stand and idle
+  if (document.visibilityState === 'visible' && !compWalking) {
+    const roll = Math.random();
+    if (roll < 0.6) waitMs = walkSomewhere() + 400;        // amble to a new spot
+    else if (roll < 0.8) { hopCompanion(); waitMs = 1400; }
+    // else: just stand there being alive (the gif idles by itself)
+  }
+  compTimer = setTimeout(companionLoop, waitMs);
+}
+
+function walkSomewhere() {
+  const el = $('companion');
+  const maxX = Math.max(80, window.innerWidth - 110);
+  const x = 12 + Math.random() * maxX;
+  const dist = Math.abs(x - compX);
+  const durMs = Math.min(6000, Math.max(900, (dist / WALK_SPEED) * 1000));
+  el.querySelector('img').style.transform = x > compX ? 'scaleX(-1)' : '';   // face travel direction
+  el.style.transition = `transform ${durMs}ms linear`;
+  el.style.transform = `translateX(${x}px)`;
+  el.classList.add('walking');
+  compWalking = true;
   compX = x;
+  setTimeout(() => { el.classList.remove('walking'); compWalking = false; }, durMs);
+  return durMs;
+}
+
+function hopCompanion() {
+  const el = $('companion');
+  el.classList.remove('hopping'); void el.offsetWidth;
+  el.classList.add('hopping');
+  setTimeout(() => el.classList.remove('hopping'), 700);
 }
 
 const COMPANION_LINES = [
@@ -436,13 +476,11 @@ const COMPANION_LINES = [
 
 async function pokeCompanion() {
   const p = petInfo(rwState()); if (!p) return;
-  const img = $('companion').querySelector('img');
-  img.classList.remove('pet-bounce'); void img.offsetWidth;
-  img.classList.add('pet-bounce');
-  wanderCompanion();                        // hop away to a new spot
+  hopCompanion();
   const line = pick(COMPANION_LINES);
   await speak(`${p.mon.name} says: ${line.en}`, 'en');
   speak(line.zh, 'zh');
+  walkSomewhere();                          // scamper off after saying hi
 }
 
 /* ---------- wire up ---------- */
