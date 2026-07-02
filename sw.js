@@ -1,8 +1,8 @@
 /* Baca Buddy service worker — full offline support.
    Bump VERSION whenever any app file changes: the new SW re-precaches
    everything and old caches are dropped on activate. */
-const VERSION = 'baca-v8';
-const RUNTIME = 'baca-runtime-v8';
+const VERSION = 'baca-v9';
+const RUNTIME = 'baca-runtime-v9';
 
 const CORE = [
   '.',

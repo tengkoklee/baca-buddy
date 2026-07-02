@@ -63,6 +63,8 @@ function pickVoice(lang) {
   return v;
 }
 
+let ttsAlive = false;   // flips true the first time ANY utterance genuinely starts
+
 function speak(text, lang) {
   return new Promise((resolve) => {
     if (!state.sound || !window.speechSynthesis || !text) { resolve(); return; }
@@ -73,16 +75,20 @@ function speak(text, lang) {
     u.rate = state.speed; u.pitch = 1.05;
     let done = false, started = false;
     const finish = () => { if (!done) { done = true; resolve(); } };
-    u.onstart = () => { started = true; };
+    u.onstart = () => { started = true; ttsAlive = true; };
     u.onend = finish; u.onerror = finish;
-    speechSynthesis.speak(u);
-    try { speechSynthesis.resume(); } catch (e) {}   // unstick the iOS/Chrome paused-synth bug
-    setTimeout(() => {                                // watchdog: if it never started, kick once
-      if (!started && !done) {
-        try { speechSynthesis.cancel(); speechSynthesis.resume(); speechSynthesis.speak(u); } catch (e) {}
-      }
-    }, 900);
-    setTimeout(finish, Math.min(String(text).length * 400 + 2200, 8000));   // safety net if onend never fires (capped)
+    // cancel() + speak() in the same tick can zombie the utterance
+    // (speaking=true, no audio, no events) — give the engine a beat first
+    setTimeout(() => {
+      try { speechSynthesis.speak(u); speechSynthesis.resume(); } catch (e) {}
+      setTimeout(() => {                            // watchdog: re-kick once if it never started
+        if (!started && !done) {
+          try { speechSynthesis.cancel(); } catch (e) {}
+          setTimeout(() => { try { speechSynthesis.speak(u); speechSynthesis.resume(); } catch (e) {} }, 120);
+        }
+      }, 1000);
+    }, 60);
+    setTimeout(finish, Math.min(String(text).length * 400 + 2600, 8500));   // safety net if onend never fires (capped)
   });
 }
 
@@ -552,6 +558,27 @@ function updateVoiceNote() {
 function openSheet() { refreshSettingsUI(); updateVoiceNote(); $('sheetBack').classList.add('open'); }
 function closeSheet() { $('sheetBack').classList.remove('open'); }
 
+/* ---------- sound-check diagnostic: says exactly why audio is/isn't working ---------- */
+async function runSoundTest() {
+  const el = $('soundDiag');
+  if (!window.speechSynthesis) { el.innerHTML = '❌ This browser has no speech engine at all. Use Safari.'; return; }
+  const vs = speechSynthesis.getVoices();
+  const en = pickVoice('en'), zh = pickVoice('zh'), ms = pickVoice('ms');
+  const line1 = `Voices found: <b>${vs.length}</b> — EN: ${en ? en.name : '❌ none'} · 中文: ${zh ? zh.name : '❌ none'} · BM: ${ms ? ms.name + (ms.lang.startsWith('id') ? ' (Indonesian fallback)' : '') : '❌ none'}`;
+  if (!state.sound) {
+    el.innerHTML = `${line1}<br>🔇 <b>Sound is MUTED in the app</b> — tap the 🔇 button at the top right to unmute.`;
+    return;
+  }
+  el.innerHTML = `${line1}<br>⏳ Speaking a test line in each language — listen…`;
+  ttsAlive = false;
+  await speak('Hello Jayden!', 'en');
+  await speak('你好！', 'zh');
+  await speak('Selamat datang!', 'ms');
+  el.innerHTML = ttsAlive
+    ? `${line1}<br>✅ <b>The speech engine IS working</b> — if you heard nothing, check the iPad side switch / volume buttons / Silent Mode in Control Centre.`
+    : `${line1}<br>⚠️ <b>The engine accepted the words but never spoke.</b> This browser/preview cannot play speech — open the app in <b>Safari</b> (or Chrome) instead. The app itself is fine.`;
+}
+
 /* =========================================================================
    WIRE UP
    ========================================================================= */
@@ -564,6 +591,7 @@ function init() {
   $('homeBtn').addEventListener('click', goHome);
   $('brand').addEventListener('click', goHome);
   $('settingsBtn').addEventListener('click', openSheet);
+  $('testSound').addEventListener('click', runSoundTest);
   $('sheetBack').addEventListener('click', (e) => { if (e.target === $('sheetBack')) closeSheet(); });
   $('sheetClose').addEventListener('click', closeSheet);
 
