@@ -1,0 +1,1138 @@
+[
+ {
+  "w": "a lot",
+  "pos": "adv + pron"
+ },
+ {
+  "w": "a lot of",
+  "pos": "det"
+ },
+ {
+  "w": "about",
+  "pos": "prep"
+ },
+ {
+  "w": "add",
+  "pos": "v"
+ },
+ {
+  "w": "afternoon",
+  "pos": "n"
+ },
+ {
+  "w": "again",
+  "pos": "adv"
+ },
+ {
+  "w": "alien",
+  "pos": "n"
+ },
+ {
+  "w": "alphabet",
+  "pos": "n"
+ },
+ {
+  "w": "always",
+  "pos": ""
+ },
+ {
+  "w": "and",
+  "pos": "conj"
+ },
+ {
+  "w": "angry",
+  "pos": "adj"
+ },
+ {
+  "w": "answer",
+  "pos": "n + v"
+ },
+ {
+  "w": "armchair",
+  "pos": "n"
+ },
+ {
+  "w": "ask",
+  "pos": "v"
+ },
+ {
+  "w": "baby",
+  "pos": "n"
+ },
+ {
+  "w": "baseball",
+  "pos": "n"
+ },
+ {
+  "w": "basketball",
+  "pos": "n"
+ },
+ {
+  "w": "bath",
+  "pos": "n"
+ },
+ {
+  "w": "beach",
+  "pos": "n"
+ },
+ {
+  "w": "bean",
+  "pos": "n"
+ },
+ {
+  "w": "bear",
+  "pos": "n"
+ },
+ {
+  "w": "bed",
+  "pos": "n"
+ },
+ {
+  "w": "bedroom",
+  "pos": "n"
+ },
+ {
+  "w": "behind",
+  "pos": "prep"
+ },
+ {
+  "w": "between",
+  "pos": "prep"
+ },
+ {
+  "w": "birthday",
+  "pos": "n"
+ },
+ {
+  "w": "board",
+  "pos": "n"
+ },
+ {
+  "w": "body",
+  "pos": "n"
+ },
+ {
+  "w": "bookcase",
+  "pos": "n"
+ },
+ {
+  "w": "bookshop",
+  "pos": "n"
+ },
+ {
+  "w": "boots",
+  "pos": "n"
+ },
+ {
+  "w": "bounce",
+  "pos": "v"
+ },
+ {
+  "w": "box",
+  "pos": "n"
+ },
+ {
+  "w": "boy",
+  "pos": "n"
+ },
+ {
+  "w": "bread",
+  "pos": "n"
+ },
+ {
+  "w": "breakfast",
+  "pos": "n"
+ },
+ {
+  "w": "burger",
+  "pos": "n"
+ },
+ {
+  "w": "bus",
+  "pos": "n"
+ },
+ {
+  "w": "but",
+  "pos": "conj"
+ },
+ {
+  "w": "camera",
+  "pos": "n"
+ },
+ {
+  "w": "cap",
+  "pos": ""
+ },
+ {
+  "w": "chair",
+  "pos": "n"
+ },
+ {
+  "w": "child/children",
+  "pos": "n"
+ },
+ {
+  "w": "chocolate",
+  "pos": "n"
+ },
+ {
+  "w": "choose",
+  "pos": "v"
+ },
+ {
+  "w": "Christian",
+  "pos": "n + adj"
+ },
+ {
+  "w": "church",
+  "pos": "n"
+ },
+ {
+  "w": "clap",
+  "pos": "v"
+ },
+ {
+  "w": "class",
+  "pos": "n"
+ },
+ {
+  "w": "classmate",
+  "pos": "n"
+ },
+ {
+  "w": "classroom",
+  "pos": "n"
+ },
+ {
+  "w": "clock",
+  "pos": "n"
+ },
+ {
+  "w": "close",
+  "pos": "v"
+ },
+ {
+  "w": "closed",
+  "pos": "adj"
+ },
+ {
+  "w": "clothes",
+  "pos": "n"
+ },
+ {
+  "w": "complete",
+  "pos": "v"
+ },
+ {
+  "w": "correct",
+  "pos": "adj"
+ },
+ {
+  "w": "count",
+  "pos": "v"
+ },
+ {
+  "w": "cousin",
+  "pos": "n"
+ },
+ {
+  "w": "crayon",
+  "pos": "n"
+ },
+ {
+  "w": "cross",
+  "pos": "n + v"
+ },
+ {
+  "w": "cupboard",
+  "pos": "n"
+ },
+ {
+  "w": "dad",
+  "pos": "n"
+ },
+ {
+  "w": "day",
+  "pos": "n"
+ },
+ {
+  "w": "dinner",
+  "pos": "n"
+ },
+ {
+  "w": "dirty",
+  "pos": "adj"
+ },
+ {
+  "w": "do",
+  "pos": "v"
+ },
+ {
+  "w": "donkey",
+  "pos": "n"
+ },
+ {
+  "w": "door",
+  "pos": "n"
+ },
+ {
+  "w": "double",
+  "pos": "adj"
+ },
+ {
+  "w": "draw",
+  "pos": "v"
+ },
+ {
+  "w": "drawing",
+  "pos": "n"
+ },
+ {
+  "w": "dress",
+  "pos": "n"
+ },
+ {
+  "w": "drink",
+  "pos": "n + v"
+ },
+ {
+  "w": "drive",
+  "pos": "v"
+ },
+ {
+  "w": "ear",
+  "pos": "n"
+ },
+ {
+  "w": "egg",
+  "pos": "n"
+ },
+ {
+  "w": "eighty",
+  "pos": "n"
+ },
+ {
+  "w": "end",
+  "pos": "n"
+ },
+ {
+  "w": "enjoy",
+  "pos": "v"
+ },
+ {
+  "w": "evening",
+  "pos": "n"
+ },
+ {
+  "w": "example",
+  "pos": "n"
+ },
+ {
+  "w": "eye",
+  "pos": "n"
+ },
+ {
+  "w": "face",
+  "pos": "n"
+ },
+ {
+  "w": "family",
+  "pos": "n"
+ },
+ {
+  "w": "fantastic",
+  "pos": "adj"
+ },
+ {
+  "w": "Fantastic!",
+  "pos": "excl"
+ },
+ {
+  "w": "father",
+  "pos": "n"
+ },
+ {
+  "w": "fishing",
+  "pos": "n"
+ },
+ {
+  "w": "floor",
+  "pos": "n"
+ },
+ {
+  "w": "flower",
+  "pos": "n"
+ },
+ {
+  "w": "food",
+  "pos": "n"
+ },
+ {
+  "w": "foot/feet",
+  "pos": "n"
+ },
+ {
+  "w": "for",
+  "pos": "prep"
+ },
+ {
+  "w": "forty",
+  "pos": "n"
+ },
+ {
+  "w": "friend",
+  "pos": "n"
+ },
+ {
+  "w": "from",
+  "pos": "prep"
+ },
+ {
+  "w": "game",
+  "pos": "n"
+ },
+ {
+  "w": "girl",
+  "pos": "n"
+ },
+ {
+  "w": "give",
+  "pos": "v"
+ },
+ {
+  "w": "glasses",
+  "pos": "n"
+ },
+ {
+  "w": "go to bed",
+  "pos": "v"
+ },
+ {
+  "w": "go to sleep",
+  "pos": "v"
+ },
+ {
+  "w": "go",
+  "pos": "v"
+ },
+ {
+  "w": "goodbye",
+  "pos": "excl"
+ },
+ {
+  "w": "grandfather",
+  "pos": "n"
+ },
+ {
+  "w": "grandma",
+  "pos": "n"
+ },
+ {
+  "w": "grandmother",
+  "pos": "n"
+ },
+ {
+  "w": "grandpa",
+  "pos": "n"
+ },
+ {
+  "w": "grape",
+  "pos": "n"
+ },
+ {
+  "w": "grey",
+  "pos": "adj"
+ },
+ {
+  "w": "guitar",
+  "pos": "n"
+ },
+ {
+  "w": "hair",
+  "pos": "n"
+ },
+ {
+  "w": "handbag",
+  "pos": "n"
+ },
+ {
+  "w": "happy",
+  "pos": "adj"
+ },
+ {
+  "w": "have",
+  "pos": "v"
+ },
+ {
+  "w": "helicopter",
+  "pos": "n"
+ },
+ {
+  "w": "help",
+  "pos": "v"
+ },
+ {
+  "w": "her",
+  "pos": "poss adj"
+ },
+ {
+  "w": "here",
+  "pos": "adv"
+ },
+ {
+  "w": "Hi!",
+  "pos": "excl"
+ },
+ {
+  "w": "him",
+  "pos": "pron"
+ },
+ {
+  "w": "Hindu",
+  "pos": "n + adj"
+ },
+ {
+  "w": "hippo",
+  "pos": "n"
+ },
+ {
+  "w": "hit",
+  "pos": "v"
+ },
+ {
+  "w": "hobby",
+  "pos": "n"
+ },
+ {
+  "w": "hockey",
+  "pos": "n"
+ },
+ {
+  "w": "hold",
+  "pos": "v"
+ },
+ {
+  "w": "home",
+  "pos": "n + adv"
+ },
+ {
+  "w": "Hooray!",
+  "pos": "excl"
+ },
+ {
+  "w": "horse",
+  "pos": "n"
+ },
+ {
+  "w": "house",
+  "pos": "n"
+ },
+ {
+  "w": "how many",
+  "pos": "int"
+ },
+ {
+  "w": "how often",
+  "pos": "adv + int"
+ },
+ {
+  "w": "hundred",
+  "pos": ""
+ },
+ {
+  "w": "ice cream",
+  "pos": "n"
+ },
+ {
+  "w": "in front of",
+  "pos": "prep"
+ },
+ {
+  "w": "kick",
+  "pos": "v"
+ },
+ {
+  "w": "kid",
+  "pos": "n"
+ },
+ {
+  "w": "kiwi",
+  "pos": "n"
+ },
+ {
+  "w": "know",
+  "pos": "v"
+ },
+ {
+  "w": "lamp",
+  "pos": "n"
+ },
+ {
+  "w": "learn",
+  "pos": "v"
+ },
+ {
+  "w": "left",
+  "pos": "n"
+ },
+ {
+  "w": "lemon",
+  "pos": "n"
+ },
+ {
+  "w": "lemonade",
+  "pos": "n"
+ },
+ {
+  "w": "lesson",
+  "pos": "n"
+ },
+ {
+  "w": "lime",
+  "pos": "n"
+ },
+ {
+  "w": "line",
+  "pos": "n"
+ },
+ {
+  "w": "look",
+  "pos": "v"
+ },
+ {
+  "w": "lorry",
+  "pos": "n"
+ },
+ {
+  "w": "lots",
+  "pos": "adv + pron"
+ },
+ {
+  "w": "lots of",
+  "pos": "det"
+ },
+ {
+  "w": "love",
+  "pos": "v"
+ },
+ {
+  "w": "man/men",
+  "pos": "n"
+ },
+ {
+  "w": "mango",
+  "pos": "n"
+ },
+ {
+  "w": "many",
+  "pos": "det"
+ },
+ {
+  "w": "mat",
+  "pos": "n"
+ },
+ {
+  "w": "me",
+  "pos": "pron"
+ },
+ {
+  "w": "me too dis",
+  "pos": ""
+ },
+ {
+  "w": "meat",
+  "pos": "n"
+ },
+ {
+  "w": "meatballs",
+  "pos": "n"
+ },
+ {
+  "w": "milk",
+  "pos": "n"
+ },
+ {
+  "w": "mirror",
+  "pos": "n"
+ },
+ {
+  "w": "monkey",
+  "pos": "n"
+ },
+ {
+  "w": "morning",
+  "pos": "n"
+ },
+ {
+  "w": "mosque",
+  "pos": ""
+ },
+ {
+  "w": "mother",
+  "pos": "n"
+ },
+ {
+  "w": "motorbike",
+  "pos": "n"
+ },
+ {
+  "w": "mouse/mice",
+  "pos": "n"
+ },
+ {
+  "w": "mouth",
+  "pos": "n"
+ },
+ {
+  "w": "Muslim",
+  "pos": "n + adj"
+ },
+ {
+  "w": "never",
+  "pos": "adv"
+ },
+ {
+  "w": "next to",
+  "pos": "prep"
+ },
+ {
+  "w": "night",
+  "pos": "n"
+ },
+ {
+  "w": "ninety",
+  "pos": "n"
+ },
+ {
+  "w": "nose",
+  "pos": "n"
+ },
+ {
+  "w": "not",
+  "pos": "adv"
+ },
+ {
+  "w": "now",
+  "pos": "adv"
+ },
+ {
+  "w": "number",
+  "pos": "n"
+ },
+ {
+  "w": "of",
+  "pos": "prep"
+ },
+ {
+  "w": "often",
+  "pos": "adv"
+ },
+ {
+  "w": "oh dear",
+  "pos": "excl"
+ },
+ {
+  "w": "oh dis",
+  "pos": ""
+ },
+ {
+  "w": "or",
+  "pos": "conj"
+ },
+ {
+  "w": "our",
+  "pos": "poss adj"
+ },
+ {
+  "w": "page",
+  "pos": "n"
+ },
+ {
+  "w": "painting",
+  "pos": "n"
+ },
+ {
+  "w": "pardon",
+  "pos": "int"
+ },
+ {
+  "w": "part",
+  "pos": "n"
+ },
+ {
+  "w": "person/people",
+  "pos": "n"
+ },
+ {
+  "w": "pet",
+  "pos": "n"
+ },
+ {
+  "w": "phone",
+  "pos": "n + v"
+ },
+ {
+  "w": "pick up",
+  "pos": "v"
+ },
+ {
+  "w": "pie",
+  "pos": "n"
+ },
+ {
+  "w": "playground",
+  "pos": "n"
+ },
+ {
+  "w": "point",
+  "pos": "v"
+ },
+ {
+  "w": "poster",
+  "pos": "n"
+ },
+ {
+  "w": "pray",
+  "pos": "v"
+ },
+ {
+  "w": "praver",
+  "pos": "n"
+ },
+ {
+  "w": "question",
+  "pos": "n"
+ },
+ {
+  "w": "radio",
+  "pos": "n"
+ },
+ {
+  "w": "really",
+  "pos": "adv"
+ },
+ {
+  "w": "rice",
+  "pos": "n"
+ },
+ {
+  "w": "right dis",
+  "pos": ""
+ },
+ {
+  "w": "room",
+  "pos": "n"
+ },
+ {
+  "w": "rug",
+  "pos": "n"
+ },
+ {
+  "w": "sad",
+  "pos": "adj"
+ },
+ {
+  "w": "say",
+  "pos": "v"
+ },
+ {
+  "w": "scary",
+  "pos": "adj"
+ },
+ {
+  "w": "school",
+  "pos": "n"
+ },
+ {
+  "w": "sentence",
+  "pos": "n"
+ },
+ {
+  "w": "seventy",
+  "pos": "n"
+ },
+ {
+  "w": "ship",
+  "pos": "n"
+ },
+ {
+  "w": "shop",
+  "pos": "n"
+ },
+ {
+  "w": "show",
+  "pos": "v"
+ },
+ {
+  "w": "skateboard",
+  "pos": "n"
+ },
+ {
+  "w": "skateboarding",
+  "pos": "n"
+ },
+ {
+  "w": "smile",
+  "pos": "n + v"
+ },
+ {
+  "w": "so dis",
+  "pos": ""
+ },
+ {
+  "w": "sofa",
+  "pos": "n"
+ },
+ {
+  "w": "some",
+  "pos": "det"
+ },
+ {
+  "w": "sometimes",
+  "pos": "adv"
+ },
+ {
+  "w": "song",
+  "pos": "n"
+ },
+ {
+  "w": "spell",
+  "pos": "v"
+ },
+ {
+  "w": "sport",
+  "pos": "n"
+ },
+ {
+  "w": "stand",
+  "pos": "v"
+ },
+ {
+  "w": "start",
+  "pos": "v"
+ },
+ {
+  "w": "story",
+  "pos": "n"
+ },
+ {
+  "w": "street",
+  "pos": "n"
+ },
+ {
+  "w": "sun",
+  "pos": "n"
+ },
+ {
+  "w": "swim",
+  "pos": "v"
+ },
+ {
+  "w": "table",
+  "pos": "n"
+ },
+ {
+  "w": "table tennis",
+  "pos": "n"
+ },
+ {
+  "w": "tablet",
+  "pos": "n"
+ },
+ {
+  "w": "tail",
+  "pos": "n"
+ },
+ {
+  "w": "talk",
+  "pos": "v"
+ },
+ {
+  "w": "teacher",
+  "pos": "n"
+ },
+ {
+  "w": "television/TV",
+  "pos": "n"
+ },
+ {
+  "w": "temple",
+  "pos": "n"
+ },
+ {
+  "w": "tennis racket",
+  "pos": "n"
+ },
+ {
+  "w": "thanks dis",
+  "pos": ""
+ },
+ {
+  "w": "the",
+  "pos": "det"
+ },
+ {
+  "w": "their",
+  "pos": "poss adj"
+ },
+ {
+  "w": "them",
+  "pos": "pron"
+ },
+ {
+  "w": "then dis",
+  "pos": ""
+ },
+ {
+  "w": "there",
+  "pos": "adv"
+ },
+ {
+  "w": "they",
+  "pos": "pron"
+ },
+ {
+  "w": "thing",
+  "pos": "n"
+ },
+ {
+  "w": "thirty",
+  "pos": "n"
+ },
+ {
+  "w": "throw",
+  "pos": "v"
+ },
+ {
+  "w": "tick",
+  "pos": "n + v"
+ },
+ {
+  "w": "to",
+  "pos": "prep"
+ },
+ {
+  "w": "tomorrow",
+  "pos": ""
+ },
+ {
+  "w": "too",
+  "pos": "adv"
+ },
+ {
+  "w": "toy",
+  "pos": "n"
+ },
+ {
+  "w": "try",
+  "pos": "n + v"
+ },
+ {
+  "w": "TV/television",
+  "pos": "n"
+ },
+ {
+  "w": "under",
+  "pos": "prep"
+ },
+ {
+  "w": "understand v us",
+  "pos": "pron"
+ },
+ {
+  "w": "wall",
+  "pos": "n"
+ },
+ {
+  "w": "watch",
+  "pos": "n + v"
+ },
+ {
+  "w": "water",
+  "pos": "n"
+ },
+ {
+  "w": "watermelon",
+  "pos": "n"
+ },
+ {
+  "w": "wave",
+  "pos": "v"
+ },
+ {
+  "w": "we",
+  "pos": "pron"
+ },
+ {
+  "w": "well dis",
+  "pos": ""
+ },
+ {
+  "w": "which",
+  "pos": "int"
+ },
+ {
+  "w": "white",
+  "pos": "adj"
+ },
+ {
+  "w": "who",
+  "pos": "int"
+ },
+ {
+  "w": "window",
+  "pos": "n"
+ },
+ {
+  "w": "with",
+  "pos": "prep"
+ },
+ {
+  "w": "woman/women",
+  "pos": "n"
+ },
+ {
+  "w": "word",
+  "pos": "n"
+ },
+ {
+  "w": "would like",
+  "pos": "v"
+ },
+ {
+  "w": "wow!",
+  "pos": "excl"
+ },
+ {
+  "w": "year",
+  "pos": "n"
+ },
+ {
+  "w": "yellow",
+  "pos": "adj"
+ },
+ {
+  "w": "yes",
+  "pos": "adv"
+ },
+ {
+  "w": "you",
+  "pos": "pron"
+ },
+ {
+  "w": "young",
+  "pos": "adj"
+ },
+ {
+  "w": "your",
+  "pos": "poss adj"
+ },
+ {
+  "w": "zebra",
+  "pos": "n"
+ },
+ {
+  "w": "zoo",
+  "pos": "n"
+ }
+]

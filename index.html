@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Baca Buddy" />
+  <meta name="theme-color" content="#FBF3E2" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <title>Baca Buddy 🦉</title>
+
+  <!-- Lexend loads when online; system rounded font is the fallback -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&family=Nunito:wght@600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ============ TOP BAR ============ -->
+    <div class="topbar">
+      <button class="iconbtn" id="homeBtn" title="Home" aria-label="Home">🏠</button>
+      <div class="brand" id="brand">
+        <span class="owl">🦉</span>
+        <div>
+          <div class="name">Baca Buddy</div>
+          <div class="sub">English · 中文 · Bahasa Melayu</div>
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <button class="iconbtn" id="soundBtn" title="Sound on/off" aria-label="Sound">🔊</button>
+      <button class="iconbtn" id="settingsBtn" title="Settings" aria-label="Settings">⚙️</button>
+    </div>
+
+    <!-- ============ HOME ============ -->
+    <section class="screen active" id="screen-home">
+      <div class="dose-bar" id="doseBar"></div>
+      <div class="menu-grid" id="menuGrid"><!-- built by app.js --></div>
+      <p class="hint-line">Tap a picture and I'll read it to you. 点一点图片，我会读给你听。</p>
+    </section>
+
+    <!-- ============ THEME PICKER ============ -->
+    <section class="screen" id="screen-themes">
+      <div class="screen-title"><span class="big" id="themeModeIcon">📚</span> <span id="themeModeTitle">Pick a topic</span></div>
+      <div class="theme-grid" id="themeGrid"><!-- built by app.js --></div>
+    </section>
+
+    <!-- ============ FLASHCARDS (Explore) ============ -->
+    <section class="screen" id="screen-flash">
+      <div class="screen-title"><span class="big">📖</span> <span id="flashThemeName">Explore</span></div>
+      <div class="flash-wrap">
+        <div class="flashcard">
+          <div class="flash-emoji tap-hint" id="flashEmoji">🐶</div>
+          <div class="rows" id="flashRows" style="width:100%"><!-- language rows --></div>
+        </div>
+        <div class="flash-nav">
+          <button class="iconbtn" id="flashPrev" aria-label="Previous">◀</button>
+          <button class="iconbtn" id="flashPlay" aria-label="Play all"><span>🔊</span><span class="lbl">Play all</span></button>
+          <span class="count" id="flashCount">1 / 10</span>
+          <button class="iconbtn" id="flashNext" aria-label="Next">▶</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ LISTEN & FIND ============ -->
+    <section class="screen" id="screen-listen">
+      <div class="screen-title"><span class="big">👂</span> <span>Listen &amp; Find</span></div>
+      <div class="game-prompt">
+        <div class="q" id="listenQ">Which one did you hear?</div>
+        <button class="iconbtn" id="listenReplay" aria-label="Play again"><span>🔊</span><span class="lbl">Hear again</span></button>
+      </div>
+      <div class="stars" id="listenStars"></div>
+      <div class="choice-grid" id="listenChoices"></div>
+    </section>
+
+    <!-- ============ MATCH THE WORD ============ -->
+    <section class="screen" id="screen-match">
+      <div class="screen-title"><span class="big">🎯</span> <span>Match the Word</span></div>
+      <div class="game-prompt">
+        <div class="big-emoji" id="matchEmoji" title="Tap to hear">🐶</div>
+        <div class="q">Tap the word. (Tap a card to hear it.)</div>
+      </div>
+      <div class="stars" id="matchStars"></div>
+      <div class="choice-grid" id="matchChoices"></div>
+    </section>
+
+    <!-- ============ SOUND IT OUT ============ -->
+    <section class="screen" id="screen-build">
+      <div class="screen-title"><span class="big">🔤</span> <span>Sound It Out</span></div>
+      <div class="game-prompt">
+        <div class="big-emoji" id="buildEmoji" title="Tap to hear">🐶</div>
+        <button class="iconbtn small" id="buildReplay" aria-label="Hear the word"><span>🔊</span><span class="lbl">Hear it</span></button>
+      </div>
+      <div class="build-slots" id="buildSlots"></div>
+      <div class="tile-tray" id="buildTiles"></div>
+      <div class="stars" id="buildStars"></div>
+    </section>
+
+    <!-- ============ BLEND IT (syllables) ============ -->
+    <section class="screen" id="screen-blend">
+      <div class="screen-title"><span class="big">🧩</span> <span>Blend It</span></div>
+      <div class="game-prompt">
+        <div class="big-emoji" id="blendEmoji" title="Tap to hear">🍌</div>
+        <button class="iconbtn small" id="blendReplay" aria-label="Hear the word"><span>🔊</span><span class="lbl">Hear it</span></button>
+      </div>
+      <div class="build-slots" id="blendSlots"></div>
+      <div class="tile-tray" id="blendTiles"></div>
+      <div class="stars" id="blendStars"></div>
+    </section>
+
+    <!-- ============ TRACE: character picker ============ -->
+    <section class="screen" id="screen-tracepick">
+      <div class="screen-title"><span class="big">✍️</span> <span>Write 写字 — pick a character</span></div>
+      <div class="choice-grid" id="traceGrid"></div>
+    </section>
+
+    <!-- ============ TRACE: stroke practice ============ -->
+    <section class="screen" id="screen-trace">
+      <div class="screen-title"><span class="big">✍️</span> <span id="traceTitle">写字</span></div>
+      <div class="trace-wrap">
+        <div id="traceBox"></div>
+        <div class="trace-side">
+          <div class="trace-meaning" id="traceMeaning"></div>
+          <div class="trace-controls">
+            <button class="iconbtn" id="traceWatch">👀<span class="lbl">Watch</span></button>
+            <button class="iconbtn" id="traceGo">✍️<span class="lbl">Trace</span></button>
+            <button class="iconbtn" id="traceHear">🔊</button>
+          </div>
+          <div class="trace-controls">
+            <button class="iconbtn" id="tracePrev" aria-label="Previous">◀</button>
+            <button class="iconbtn" id="traceNext" aria-label="Next">▶</button>
+            <button class="iconbtn" id="traceBack">📋<span class="lbl">List</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="stars" id="traceStars"></div>
+    </section>
+
+    <!-- ============ RADICAL BUILDER ============ -->
+    <section class="screen" id="screen-radical">
+      <div class="screen-title"><span class="big">🧱</span> <span>Build 拼字</span></div>
+      <div class="game-prompt">
+        <div class="big-emoji" id="radicalEmoji" title="Tap to hear">👍</div>
+        <div class="q" id="radicalHint"></div>
+        <button class="iconbtn small" id="radicalReplay" aria-label="Hear it"><span>🔊</span><span class="lbl">Hear it</span></button>
+      </div>
+      <div class="build-slots radical-assembly" id="radicalAssembly"></div>
+      <div class="tile-tray" id="radicalTray"></div>
+      <div class="stars" id="radicalStars"></div>
+    </section>
+
+    <!-- ============ SOUND HUNT (PA with letters) ============ -->
+    <section class="screen" id="screen-hunt">
+      <div class="screen-title"><span class="big">🔍</span> <span>Sound Hunt</span></div>
+      <div class="game-prompt">
+        <div class="hunt-letter" id="huntLetter">S s</div>
+        <div class="q">Which one starts with this sound?</div>
+        <button class="iconbtn small" id="huntReplay" aria-label="Hear the sound"><span>🔊</span><span class="lbl">Hear it</span></button>
+      </div>
+      <div class="choice-grid" id="huntChoices"></div>
+      <div class="stars" id="huntStars"></div>
+    </section>
+
+    <!-- ============ READ ALONG (fluency) ============ -->
+    <section class="screen" id="screen-fluent">
+      <div class="screen-title"><span class="big">🏃</span> <span>Read Along</span>
+        <span class="seg flu-langs" id="fluLangBtns">
+          <button data-lang="ms">BM</button>
+          <button data-lang="en">EN</button>
+        </span>
+      </div>
+      <div class="flu-card">
+        <div class="flu-sentence" id="fluSentence"></div>
+        <div class="flu-row">
+          <button class="iconbtn" id="fluListen">🔊<span class="lbl">Listen</span></button>
+          <button class="iconbtn flu-go" id="fluGo">▶️<span class="lbl">Start</span></button>
+          <button class="iconbtn" id="fluNext">⏭️<span class="lbl">Next</span></button>
+        </div>
+        <div class="flu-meta">
+          <span id="fluRound">Round 1 / 3</span>
+          <span id="fluTimer" class="flu-timer">0.0s</span>
+        </div>
+        <div class="flu-times" id="fluTimes"></div>
+        <p class="hint-line">Listen first 🔊, then read it out loud — beat your own time, gently!</p>
+      </div>
+    </section>
+
+    <!-- ============ SAME SOUND (homophones) ============ -->
+    <section class="screen" id="screen-homophone">
+      <div class="screen-title"><span class="big">👯</span> <span>Same Sound 同音字</span></div>
+      <div class="game-prompt">
+        <div class="big-emoji" id="homoEmoji" title="Tap to hear">🐴</div>
+        <div class="q">Which character is this? <b id="homoPinyin"></b></div>
+        <button class="iconbtn small" id="homoReplay" aria-label="Hear it"><span>🔊</span><span class="lbl">Hear it</span></button>
+      </div>
+      <div class="choice-grid" id="homoChoices"></div>
+      <div class="hint-line" id="homoGloss"></div>
+      <div class="stars" id="homoStars"></div>
+    </section>
+
+  </div>
+
+  <!-- ============ SETTINGS SHEET ============ -->
+  <div class="sheet-back" id="sheetBack">
+    <div class="sheet">
+      <h2>⚙️ Settings</h2>
+
+      <div class="set-row">
+        <div class="label">🐢 Speaking speed</div>
+        <div class="seg" id="segSpeed">
+          <button data-speed="0.55">🐢 Slow</button>
+          <button data-speed="0.75">🚶 Medium</button>
+          <button data-speed="0.95">🐇 Normal</button>
+        </div>
+      </div>
+
+      <div class="set-row">
+        <div class="label">🔤 Reading font</div>
+        <div class="seg" id="segFont">
+          <button data-font="lexend">Lexend</button>
+          <button data-font="dys">OpenDyslexic</button>
+        </div>
+      </div>
+
+      <div class="set-row">
+        <div class="label">🗣️ Practise language (games)</div>
+        <div class="seg" id="segLang">
+          <button data-lang="en">EN</button>
+          <button data-lang="zh">中文</button>
+          <button data-lang="ms">BM</button>
+          <button data-lang="mix">🎲 Mix</button>
+        </div>
+      </div>
+
+      <button class="iconbtn" id="sheetClose" style="width:100%; margin-top:8px;"><span class="lbl">Done ✓</span></button>
+      <p class="hint-line" id="voiceNote"></p>
+    </div>
+  </div>
+
+  <div class="confetti" id="confetti"></div>
+
+  <!-- stroke-order engine + per-character stroke data are vendored locally
+       (vendor/ + hanzi-data/) so ✍️ Write works fully offline -->
+  <script src="vendor/hanzi-writer.min.js"></script>
+  <script src="data.js"></script>
+  <script src="data2.js"></script>
+  <script src="app.js"></script>
+  <script src="games2.js"></script>
+  <script src="games3.js"></script>
+  <script>
+    // PWA: register the service worker (needs HTTPS or localhost)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {/* http LAN: fine, still works online */});
+    }
+  </script>
+</body>
+</html>
