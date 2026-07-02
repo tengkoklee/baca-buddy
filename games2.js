@@ -69,7 +69,8 @@ function renderTrace() {
 function startTraceQuiz() {
   if (!traceWriter) return;
   traceWriter.quiz({
-    onComplete: async () => {
+    onComplete: async (summary) => {
+      recordAnswer('trace', 'zh', TRACE_CHARS[traceIdx].ch, (summary && summary.totalMistakes || 0) <= 3);
       await celebrate();
       $('traceStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5));
     }
@@ -119,12 +120,16 @@ function traceStep(dir) {
 let rad = null;   // { item, remaining: {part: count}, placed: [], tray: [] }
 
 function nextRadical() {
-  const item = bagPick('radical', COMPONENT_CHARS);
+  const lv = gameLevel('radical', 'zh');
+  const banded = levelFilter(COMPONENT_CHARS, (c) =>
+    lv === 1 ? c.parts.length === 2 : (lv === 2 ? c.parts.length <= 3 : c.parts.length === 3));
+  const item = adaptivePick('radical', 'zh', banded, (c) => c.ch);
   const remaining = {};
   item.parts.forEach((p) => remaining[p] = (remaining[p] || 0) + 1);
-  const distractors = shuffle(RADICAL_POOL.filter((p) => !item.parts.includes(p))).slice(0, 2);
-  rad = { item, remaining, placed: [], tray: shuffle([...item.parts, ...distractors]) };
-  $('radicalStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5));
+  const nDistract = [2, 3, 4][lv - 1];
+  const distractors = shuffle(RADICAL_POOL.filter((p) => !item.parts.includes(p))).slice(0, nDistract);
+  rad = { item, remaining, placed: [], failed: false, tray: shuffle([...item.parts, ...distractors]) };
+  $('radicalStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5)) + levelTag('radical', 'zh');
   $('radicalEmoji').textContent = item.emoji;
   $('radicalHint').innerHTML = t('make_word', { w: item.en }) + ` <span class="pinyin">${item.py}</span>`;
   renderRadical();
@@ -159,6 +164,7 @@ async function placeRadical(tileEl) {
     rad.placed.push(p);
     renderRadical();
     if (rad.placed.length === rad.item.parts.length) {
+      recordAnswer('radical', 'zh', rad.item.ch, !rad.failed);
       // reveal!
       const res = $('radicalAssembly').querySelector('.result');
       res.textContent = rad.item.ch;
@@ -168,6 +174,7 @@ async function placeRadical(tileEl) {
       nextRadical();
     }
   } else {
+    rad.failed = true;                       // counts against mastery, never against him
     tileEl.classList.add('wrong');
     setTimeout(() => tileEl.classList.remove('wrong'), 400);
     const t = pick(TRY_AGAIN);
@@ -181,10 +188,13 @@ async function placeRadical(tileEl) {
 let homo = null;  // { set, target }
 
 function nextHomo() {
-  const set = bagPick('homo', HOMOPHONE_SETS);
+  const lv = gameLevel('homo', 'zh');
+  const banded = levelFilter(HOMOPHONE_SETS, (s) =>
+    lv === 1 ? s.opts.length === 2 : (lv === 3 ? s.opts.length >= 3 : true));
+  const set = adaptivePick('homo', 'zh', banded, (s) => s.py);
   const target = pick(set.opts);
   homo = { set, target };
-  $('homoStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5));
+  $('homoStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5)) + levelTag('homo', 'zh');
   $('homoEmoji').textContent = target.emoji;
   $('homoPinyin').textContent = set.py;
   $('homoGloss').innerHTML = '';
@@ -198,6 +208,7 @@ function nextHomo() {
 
 async function answerHomo(el) {
   const o = homo.set.opts.find((x) => x.ch === el.dataset.ch);
+  recordAnswer('homo', 'zh', homo.set.py + ':' + homo.target.ch, o.ch === homo.target.ch);
   if (o.ch === homo.target.ch) {
     el.classList.add('correct');
     // teach the whole family: 马 horse 🐴 · 蚂 ant 🐜 …
@@ -224,13 +235,18 @@ let blend = null;  // { word, lang, syls, slots, tray }
 
 function nextBlend() {
   const lang = questionLang(false);
-  const multi = ctx.theme.words.filter((w) => (lang === 'ms' ? w.ms.syl : w.en.syl).length >= 2);
-  const word = bagPick('blend:' + ctx.theme.id + ':' + lang, multi.length ? multi : ctx.theme.words);
+  const lv = gameLevel('blend', lang);
+  const sylN = (w) => (lang === 'ms' ? w.ms.syl : w.en.syl).length;
+  const multi = ctx.theme.words.filter((w) => sylN(w) >= 2);
+  const banded = levelFilter(multi.length ? multi : ctx.theme.words, (w) =>
+    lv === 1 ? sylN(w) === 2 : (lv === 2 ? sylN(w) === 3 : sylN(w) >= 3));
+  const word = adaptivePick('blend', lang, banded, (w) => w.emoji);
   const syls = (lang === 'ms' ? w2syl(word, 'ms') : w2syl(word, 'en')).slice();
-  // one distractor syllable from a different word
-  const other = pick(ctx.theme.words.filter((w) => w.emoji !== word.emoji));
-  const dPool = w2syl(other, lang).filter((s) => !syls.includes(s));
-  const tray = shuffle(dPool.length ? [...syls, dPool[0]] : [...syls]);
+  // distractor syllables from other words — more of them at higher levels
+  const nDistract = gameLevel('blend', lang) === 1 ? 1 : 2;
+  const others = shuffle(ctx.theme.words.filter((w) => w.emoji !== word.emoji));
+  const dPool = [...new Set(others.flatMap((o) => w2syl(o, lang)))].filter((s) => !syls.includes(s));
+  const tray = shuffle([...syls, ...dPool.slice(0, nDistract)]);
   blend = { word, lang, syls, slots: new Array(syls.length).fill(null), tray };
   ctx.answer = word; ctx.curLang = lang;
   $('blendStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5));
@@ -273,6 +289,7 @@ function renderBlend() {
 
 async function checkBlend() {
   const ok = blend.slots.join('|') === blend.syls.join('|');
+  recordAnswer('blend', blend.lang, blend.word.emoji, ok);
   if (ok) {
     $('blendSlots').querySelectorAll('.slot').forEach((s) => s.classList.add('filled'));
     // blend it: syllables slowly, then the whole word

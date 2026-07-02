@@ -18,15 +18,16 @@ let hunt = null;   // { lang, letter, target, choices }
 function nextHunt() {
   const lang = questionLang(false);                    // alphabetic langs only
   const words = ctx.theme.words;
-  const target = bagPick('hunt:' + ctx.theme.id + ':' + lang, words);
+  const target = adaptivePick('hunt', lang, words, (w) => w.emoji);
   const letter = spoken(target, lang)[0].toLowerCase();
   // distractors must start with a DIFFERENT letter (that's the whole game)
-  const wrong = shuffle(words.filter((w) => spoken(w, lang)[0].toLowerCase() !== letter)).slice(0, 2);
+  const nWrong = choiceCount('hunt', lang, words.length) - 1;
+  const wrong = shuffle(words.filter((w) => spoken(w, lang)[0].toLowerCase() !== letter)).slice(0, nWrong);
   if (wrong.length < 2) { nextHunt(); return; }        // theme too uniform — rare
   hunt = { lang, letter, target, choices: shuffle([target, ...wrong]) };
   ctx.answer = target; ctx.curLang = lang;
 
-  $('huntStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5));
+  $('huntStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5)) + levelTag('hunt', lang);
   $('huntLetter').textContent = letter.toUpperCase() + ' ' + letter;
   $('huntChoices').innerHTML = hunt.choices.map((w) => `
     <div class="choice hunt-choice" data-emoji="${w.emoji}">
@@ -48,6 +49,7 @@ async function speakHuntSound() { await speak(huntSoundText(), hunt.lang); }
 
 async function answerHunt(el) {
   const w = hunt.choices.find((c) => c.emoji === el.dataset.emoji);
+  recordAnswer('hunt', hunt.lang, hunt.target.emoji, w.emoji === hunt.target.emoji);
   await speak(spoken(w, hunt.lang), hunt.lang);        // always read what they tapped
   if (w.emoji === hunt.target.emoji) {
     el.classList.add('correct');

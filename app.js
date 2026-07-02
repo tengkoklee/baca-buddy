@@ -407,11 +407,11 @@ function pickChoices(correct, n, pool) {
 function nextListen() {
   const lang = questionLang(true);
   ctx.curLang = lang;
-  const correct = bagPick('listen:' + ctx.theme.id + ':' + lang, ctx.theme.words);
+  const correct = adaptivePick('listen', lang, ctx.theme.words, (w) => w.emoji);
   ctx.answer = correct;
-  const choices = pickChoices(correct, Math.min(4, ctx.theme.words.length), ctx.theme.words);
+  const choices = pickChoices(correct, choiceCount('listen', lang, ctx.theme.words.length), ctx.theme.words);
 
-  $('listenStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5));
+  $('listenStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5)) + levelTag('listen', lang);
   $('listenChoices').innerHTML = choices.map((w) => `
     <div class="choice" data-emoji="${w.emoji}"><span class="ce">${w.emoji}</span></div>`).join('');
   $('listenChoices').querySelectorAll('.choice').forEach((el) => {
@@ -424,6 +424,7 @@ function nextListen() {
 }
 
 async function answerListen(el, word) {
+  recordAnswer('listen', ctx.curLang, ctx.answer.emoji, word.emoji === ctx.answer.emoji);
   if (word.emoji === ctx.answer.emoji) {
     el.classList.add('correct');
     disableChoices('listenChoices');
@@ -445,11 +446,11 @@ async function answerListen(el, word) {
 function nextMatch() {
   const lang = questionLang(true);
   ctx.curLang = lang;
-  const correct = bagPick('match:' + ctx.theme.id + ':' + lang, ctx.theme.words);
+  const correct = adaptivePick('match', lang, ctx.theme.words, (w) => w.emoji);
   ctx.answer = correct;
-  const choices = pickChoices(correct, Math.min(4, ctx.theme.words.length), ctx.theme.words);
+  const choices = pickChoices(correct, choiceCount('match', lang, ctx.theme.words.length), ctx.theme.words);
 
-  $('matchStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5));
+  $('matchStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5)) + levelTag('match', lang);
   $('matchEmoji').textContent = correct.emoji;
   $('matchChoices').innerHTML = choices.map((w) => `
     <div class="choice" data-emoji="${w.emoji}"><span class="cw" style="border-left:0">${wordHTML(w, lang)}</span></div>`).join('');
@@ -461,6 +462,7 @@ function nextMatch() {
 }
 
 async function answerMatch(el, word) {
+  recordAnswer('match', ctx.curLang, ctx.answer.emoji, word.emoji === ctx.answer.emoji);
   await speak(spoken(word, ctx.curLang), ctx.curLang);   // read whatever they tapped (multisensory)
   if (word.emoji === ctx.answer.emoji) {
     el.classList.add('correct');
@@ -480,13 +482,18 @@ async function answerMatch(el, word) {
 function nextBuild() {
   const lang = questionLang(false);        // no Chinese letter-building
   ctx.curLang = lang;
-  const word = bagPick('build:' + ctx.theme.id + ':' + lang, ctx.theme.words);
+  // level bands: short words first, long words when he's flying
+  const lv = gameLevel('build', lang);
+  const wlen = (w) => (lang === 'ms' ? w.ms.w : w.en.w).replace(/\s+/g, '').length;
+  const pool = levelFilter(ctx.theme.words, (w) =>
+    lv === 1 ? wlen(w) <= 4 : (lv === 2 ? wlen(w) >= 4 && wlen(w) <= 7 : wlen(w) >= 6));
+  const word = adaptivePick('build', lang, pool, (w) => w.emoji);
   ctx.answer = word;
   const target = (lang === 'ms' ? word.ms.w : word.en.w).toLowerCase().replace(/\s+/g, '');
   ctx.target = target;
   ctx.slots = new Array(target.length).fill(null);
 
-  $('buildStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5));
+  $('buildStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5)) + levelTag('build', lang);
   $('buildEmoji').textContent = word.emoji;
   renderBuild();
 
@@ -551,6 +558,7 @@ function removeLetter(i) {
 
 async function checkBuild() {
   const built = ctx.slots.join('');
+  recordAnswer('build', ctx.curLang, ctx.answer.emoji, built === ctx.target);
   if (built === ctx.target) {
     $('buildSlots').querySelectorAll('.slot').forEach((s) => s.classList.add('filled'));
     await speak(spoken(ctx.answer, ctx.curLang), ctx.curLang);
