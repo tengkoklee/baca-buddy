@@ -15,6 +15,9 @@
    To add a theme: copy a whole { id, emoji, name, pinyin, words } block.
    ========================================================================= */
 
+/* The learner — used for on-screen + spoken greetings. Edit freely. */
+const CHILD_NAME = 'Jayden';
+
 const THEMES = [
   {
     id: 'animals', emoji: '🐾',

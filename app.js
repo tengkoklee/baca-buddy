@@ -78,14 +78,45 @@ function speak(text, lang) {
 /* text the TTS should read for a word in a given language */
 function spoken(word, lang) { return lang === 'zh' ? word.zh.w : (lang === 'ms' ? word.ms.w : word.en.w); }
 
-/* iOS unlocks audio only after a user gesture — prime it once. */
+/* iOS unlocks audio only after a user gesture — prime it once, then greet. */
 let audioUnlocked = false;
 function unlockAudio() {
   if (audioUnlocked || !window.speechSynthesis) return;
   audioUnlocked = true;
   try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {}
+  setTimeout(speakGreeting, 250);          // spoken hello rides on the first tap
 }
 document.addEventListener('pointerdown', unlockAudio, { once: true });
+
+/* ---------- personal greeting (Jayden) ---------- */
+function greetingParts() {
+  const h = new Date().getHours();
+  if (h < 12) return { en: 'Good morning', zh: '早安' };
+  if (h < 18) return { en: 'Good afternoon', zh: '午安' };
+  return { en: 'Good evening', zh: '晚上好' };
+}
+
+function childName() { return (typeof CHILD_NAME !== 'undefined' && CHILD_NAME) || ''; }
+
+function renderGreeting() {
+  const el = $('greetBar'); if (!el || !childName()) return;
+  const g = greetingParts();
+  el.innerHTML = `👋 ${g.en}, <b>${childName()}</b>! <span class="greet-zh">${g.zh}，${childName()}！</span>`;
+}
+
+let greeted = false;
+async function speakGreeting() {
+  if (greeted || !childName()) return;
+  greeted = true;
+  const g = greetingParts();
+  await speak(`${g.en}, ${childName()}!`, 'en');
+  // the Pokémon pal joins the welcome, if one is chosen (rewards.js)
+  try {
+    const pal = (typeof petInfo === 'function') ? petInfo(rwState()) : null;
+    if (pal) await speak(`${pal.mon.name} is waiting for you!`, 'en');
+  } catch (e) {}
+  speak(`${g.zh}！`, 'zh');
+}
 
 /* =========================================================================
    RENDER HELPERS
@@ -471,6 +502,7 @@ function closeSheet() { $('sheetBack').classList.remove('open'); }
    ========================================================================= */
 function init() {
   applyFont(); applySound();
+  renderGreeting();
   buildHome();
 
   $('homeBtn').addEventListener('click', goHome);
