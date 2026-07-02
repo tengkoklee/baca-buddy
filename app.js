@@ -239,7 +239,7 @@ function renderLangTabs() {
     </button>`).join('');
   el.querySelectorAll('.lang-tab').forEach((b) => b.addEventListener('click', () => {
     state.lang = b.dataset.lang; saveState();
-    renderLangTabs(); buildHome();
+    renderLangTabs(); buildHome(); applyStaticI18n();
     speak(b.dataset.lang === 'en' ? 'English!' : (b.dataset.lang === 'zh' ? '中文！' : 'Bahasa Melayu!'), b.dataset.lang);
   }));
 }
@@ -249,8 +249,8 @@ function buildHome() {
   $('menuGrid').innerHTML = items.map((m) => `
     <div class="menu-card" data-mode="${m.mode}">
       <div class="ico">${m.ico}</div>
-      <div class="t1">${m.t1}</div>
-      <div class="t2">${m.t2}</div>
+      <div class="t1">${t('menu_' + m.mode)}</div>
+      <div class="t2">${state.lang === 'en' ? m.t2 : STR['menu_' + m.mode].en}</div>
     </div>`).join('');
   $('menuGrid').querySelectorAll('.menu-card').forEach((el) => {
     el.addEventListener('click', () => {
@@ -270,7 +270,7 @@ function openThemePicker(mode) {
   ctx.mode = mode;
   const m = MENU.find((x) => x.mode === mode);
   $('themeModeIcon').textContent = m.ico;
-  $('themeModeTitle').textContent = m.t1 + ' — pick a topic';
+  $('themeModeTitle').textContent = t('menu_' + m.mode) + ' — ' + t('pick_topic');
   $('themeGrid').innerHTML = THEMES.map((t) => `
     <div class="theme-card" data-id="${t.id}">
       <div class="ico">${t.emoji}</div>
@@ -632,6 +632,7 @@ function init() {
   renderGreeting();
   renderLangTabs();
   buildHome();
+  applyStaticI18n();
 
   $('homeBtn').addEventListener('click', goHome);
   $('brand').addEventListener('click', goHome);

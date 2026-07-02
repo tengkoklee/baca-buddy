@@ -51,7 +51,7 @@ function addStar() {
     d.sinceItem = 0;
     const k = rollItem();
     d.items[k] = (d.items[k] || 0) + 1;
-    toast(`${CARE_ITEMS[k].emoji} You got a ${CARE_ITEMS[k].name}!`);
+    toast(t('got_item', { e: CARE_ITEMS[k].emoji, item: t('item_' + k) }));
   }
   rwSave(d);
   renderRewards();
@@ -138,12 +138,12 @@ function renderRewards() {
       <span class="buddy-name">${companion.label}</span>
     </button>` : (d.caught.length ? `
     <button class="poke-buddy" id="pokeBuddyBtn" title="Choose a pal">
-      <span class="buddy-name">💛 Pick a pal!</span>
+      <span class="buddy-name">${t('pick_a_pal')}</span>
     </button>` : '');
   el.innerHTML = `${buddyHTML}
     <button class="poke-ball-btn ${d.balls > 0 ? 'ready' : ''}" id="pokeCatchBtn">
       <span class="pokeball"></span>
-      <span class="lbl">${d.balls > 0 ? `Open! ×${d.balls}` : `${toNext} ⭐ to go`}</span>
+      <span class="lbl">${d.balls > 0 ? t('open_ball', { n: d.balls }) : t('to_go', { n: toNext })}</span>
     </button>
     <span class="dose-meter poke-meter"><span class="dose-fill" style="width:${pct}%"></span></span>
     <span class="dose-item">⭐ ${d.stars}</span>
@@ -167,7 +167,7 @@ function openCatch() {
   catchMon = null;
   $('catchStage').innerHTML = `
     <div class="pokeball big tap-hint" id="catchBall"></div>
-    <div class="catch-caption">Tap the Pokéball! 点一点精灵球！</div>`;
+    <div class="catch-caption">${t('tap_ball')}</div>`;
   $('catchClose').style.display = 'none';
   $('catchBack').classList.add('open');
   $('catchBall').addEventListener('click', throwBall, { once: true });
@@ -189,7 +189,7 @@ async function revealCatch() {
     <div class="catch-burst">✨</div>
     <img class="catch-img ${legend ? 'legendary' : ''}" src="${POKE_ART(mon.id)}"
          alt="${mon.name}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'catch-img-fallback',textContent:'🎁'}))" />
-    <div class="catch-name">${legend ? '🌟 ' : ''}You caught <b>${mon.name}</b>!${legend ? ' 🌟' : ''}</div>`;
+    <div class="catch-name">${legend ? '🌟 ' : ''}${t('you_caught', { name: mon.name })}${legend ? ' 🌟' : ''}</div>`;
   $('catchClose').style.display = '';
   confetti();
   await playCry(mon.id);
@@ -242,8 +242,7 @@ function renderPet() {
   const d = rwState();
   const area = $('petArea');
   if (!d.caught.length) {
-    area.innerHTML = `<div class="pet-card"><div class="catch-caption">
-      Catch your first Pokémon to choose a pal! 先抓到宝可梦，才能选伙伴！</div></div>`;
+    area.innerHTML = `<div class="pet-card"><div class="catch-caption">${t('no_pal_yet')}</div></div>`;
     return;
   }
   if (!d.pet) { renderPetChooser(); return; }
@@ -256,7 +255,7 @@ function renderPet() {
     <div class="pet-card">
       <img class="pet-img" id="petImg" src="${POKE_ART(p.mon.id)}" alt="${p.mon.name}"
            onerror="this.style.display='none'" />
-      <div class="pet-name">${p.mon.name} · Lv ${p.level}${maxed ? ' 🏆 Best Friends!' : ''}</div>
+      <div class="pet-name">${p.mon.name} · Lv ${p.level}${maxed ? ' ' + t('best_friends') : ''}</div>
       <div class="pet-hearts">${maxed ? '❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️' : full + empty}</div>
       <div class="pet-items">
         ${Object.entries(CARE_ITEMS).map(([k, it]) => `
@@ -264,8 +263,8 @@ function renderPet() {
             ${it.emoji}<span class="lbl">×${d.items[k] || 0}</span>
           </button>`).join('')}
       </div>
-      <p class="hint-line">🍎 +1❤️ · 🎾 +2❤️ · 🎁 +3❤️ — earn items by answering in any game!</p>
-      <button class="iconbtn small" id="petSwitch">🔄<span class="lbl">Choose another pal</span></button>
+      <p class="hint-line">${t('items_hint')}</p>
+      <button class="iconbtn small" id="petSwitch">🔄<span class="lbl">${t('choose_pal')}</span></button>
     </div>`;
   $('petImg').addEventListener('click', async () => {
     bouncePet();
@@ -278,7 +277,7 @@ function renderPet() {
 function renderPetChooser() {
   const d = rwState();
   $('petArea').innerHTML = `
-    <p class="hint-line">Pick your pal! 选一个伙伴！ (hearts are saved for each one)</p>
+    <p class="hint-line">${t('pick_pal_hint')}</p>
     <div class="dex-grid">${d.caught.map((id) => {
       const p = POKEMON.find((x) => x.id === id);
       const st = d.petStats[id];
@@ -375,7 +374,7 @@ async function evolveCeremony(fromMon, toMon, p) {
 
   $('catchStage').innerHTML = `
     <img class="catch-img evolving" src="${POKE_ART(fromMon.id)}" alt="${fromMon.name}" />
-    <div class="catch-name">What?! <b>${fromMon.name}</b> is evolving!</div>`;
+    <div class="catch-name">${t('evolving', { name: fromMon.name })}</div>`;
   $('catchClose').style.display = 'none';
   $('catchBack').classList.add('open');
   catchMon = toMon;                                       // lets backdrop/close work
@@ -384,7 +383,7 @@ async function evolveCeremony(fromMon, toMon, p) {
   $('catchStage').innerHTML = `
     <div class="catch-burst">✨✨✨</div>
     <img class="catch-img legendary" src="${POKE_ART(toMon.id)}" alt="${toMon.name}" />
-    <div class="catch-name">🎉 ${fromMon.name} evolved into <b>${toMon.name}</b>!</div>`;
+    <div class="catch-name">${t('evolved', { a: fromMon.name, b: toMon.name })}</div>`;
   $('catchClose').style.display = '';
   confetti();
   renderPet(); renderRewards();                           // refresh UI before the speeches

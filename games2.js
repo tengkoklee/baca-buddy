@@ -126,7 +126,7 @@ function nextRadical() {
   rad = { item, remaining, placed: [], tray: shuffle([...item.parts, ...distractors]) };
   $('radicalStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5));
   $('radicalEmoji').textContent = item.emoji;
-  $('radicalHint').innerHTML = `Make the word for <b>${item.en}</b> <span class="pinyin">${item.py}</span>`;
+  $('radicalHint').innerHTML = t('make_word', { w: item.en }) + ` <span class="pinyin">${item.py}</span>`;
   renderRadical();
   speak(item.ch, 'zh');
 }

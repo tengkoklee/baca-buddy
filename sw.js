@@ -3,8 +3,8 @@
    everything and old caches are dropped on activate. */
 importScripts('audio-manifest.js');   // AUDIO_MAP: bundled speech clips
 
-const VERSION = 'baca-v14';
-const RUNTIME = 'baca-runtime-v14';
+const VERSION = 'baca-v15';
+const RUNTIME = 'baca-runtime-v15';
 
 const CORE = [
   '.',
@@ -17,6 +17,7 @@ const CORE = [
   'games3.js',
   'data-pokemon.js',
   'rewards.js',
+  'i18n.js',
   'audio-manifest.js',
   'manifest.json',
   'vendor/hanzi-writer.min.js',

@@ -81,9 +81,9 @@ function renderFluent() {
   $('fluLangBtns').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.lang === flu.lang));
   $('fluSentence').textContent = fluSentence();
   $('fluSentence').style.fontSize = fluSentence().length > 22 ? '2rem' : '2.6rem';
-  $('fluRound').textContent = flu.round >= 3 ? '🎉' : `Round ${flu.round + 1} / 3`;
+  $('fluRound').textContent = flu.round >= 3 ? '🎉' : t('round', { n: flu.round + 1 });
   $('fluTimer').textContent = '0.0s';
-  $('fluGo').innerHTML = '▶️<span class="lbl">Start</span>';
+  $('fluGo').innerHTML = '▶️<span class="lbl">' + t('start') + '</span>';
   renderFluTimes();
 }
 
@@ -100,7 +100,7 @@ function fluToggle() {
   if (!flu.running) {
     // start the round
     flu.running = true; flu.t0 = Date.now();
-    $('fluGo').innerHTML = '✅<span class="lbl">Done!</span>';
+    $('fluGo').innerHTML = '✅<span class="lbl">' + t('done_btn') + '</span>';
     flu.timerId = setInterval(() => {
       $('fluTimer').textContent = ((Date.now() - flu.t0) / 1000).toFixed(1) + 's';
     }, 100);
@@ -113,14 +113,14 @@ function fluToggle() {
     flu.round++;
     renderFluTimes();
     if (flu.round >= 3) {
-      $('fluGo').innerHTML = '⏭️<span class="lbl">Next</span>';
+      $('fluGo').innerHTML = '⏭️<span class="lbl">' + t('next') + '</span>';
       $('fluRound').textContent = '🎉';
       const improved = flu.times[2] <= flu.times[0];
       if (improved) { celebrate(); }
       else { speak(pick(PRAISE).en, 'en'); }           // finishing 3 rounds is a win anyway
     } else {
-      $('fluGo').innerHTML = '▶️<span class="lbl">Start</span>';
-      $('fluRound').textContent = `Round ${flu.round + 1} / 3`;
+      $('fluGo').innerHTML = '▶️<span class="lbl">' + t('start') + '</span>';
+      $('fluRound').textContent = t('round', { n: flu.round + 1 });
     }
   }
 }
@@ -178,10 +178,10 @@ function renderDose() {
   const totalH = Object.values(db).reduce((a, b) => a + b, 0) / 3600;
   const pct = Math.min(100, Math.round(100 * today / DAY_GOAL_S));
   el.innerHTML = `
-    <span class="dose-item">🔥 ${streak} day${streak === 1 ? '' : 's'}</span>
+    <span class="dose-item">${t('days', { n: streak })}</span>
     <span class="dose-meter"><span class="dose-fill" style="width:${pct}%"></span></span>
-    <span class="dose-item">${Math.floor(today / 60)}/10 min today</span>
-    <span class="dose-item">📚 ${totalH.toFixed(1)} h total</span>`;
+    <span class="dose-item">${t('min_today', { m: Math.floor(today / 60) })}</span>
+    <span class="dose-item">${t('h_total', { h: totalH.toFixed(1) })}</span>`;
 }
 
 /* =========================================================================
