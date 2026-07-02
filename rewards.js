@@ -25,17 +25,47 @@ function rwState() {
   return {
     stars: d.stars || 0, balls: d.balls || 0,
     caught: d.caught || [], goalDays: d.goalDays || {},
-    legendaryPending: d.legendaryPending || 0
+    legendaryPending: d.legendaryPending || 0,
+    items: d.items || { berry: 0, toy: 0, gift: 0 },
+    sinceItem: d.sinceItem || 0,
+    pet: d.pet || null,                 // active pal's pokemon id
+    petStats: d.petStats || {}          // id → { h: hearts, evos: times evolved }
   };
 }
 
 /* ---------- earning ---------- */
+const ITEM_EVERY_N_STARS = 4;
+
+function rollItem() {
+  const r = Math.random();
+  return r < 0.6 ? 'berry' : (r < 0.9 ? 'toy' : 'gift');
+}
+
 function addStar() {
   const d = rwState();
   d.stars++;
   if (d.stars % STARS_PER_BALL === 0) d.balls++;
+  // care-item drop for the Pokémon pal
+  d.sinceItem++;
+  if (d.sinceItem >= ITEM_EVERY_N_STARS) {
+    d.sinceItem = 0;
+    const k = rollItem();
+    d.items[k] = (d.items[k] || 0) + 1;
+    toast(`${CARE_ITEMS[k].emoji} You got a ${CARE_ITEMS[k].name}!`);
+  }
   rwSave(d);
   renderRewards();
+}
+
+/* ---------- toast (non-blocking pickup notice) ---------- */
+function toast(msg) {
+  const box = $('toastBox'); if (!box) return;
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  box.appendChild(t);
+  setTimeout(() => t.classList.add('gone'), 2200);
+  setTimeout(() => t.remove(), 2800);
 }
 
 /* daily-goal bonus ball (checked periodically; uses games3 timeDB/dayKey) */
@@ -97,13 +127,19 @@ function renderRewards() {
   const d = rwState();
   const toNext = STARS_PER_BALL - (d.stars % STARS_PER_BALL);
   const pct = Math.round(100 * (d.stars % STARS_PER_BALL) / STARS_PER_BALL);
-  const buddy = buddyOfTheDay();
-  const buddyHTML = buddy ? `
-    <button class="poke-buddy" id="pokeBuddyBtn" title="Today's buddy">
-      <img src="${POKE_ART(buddy.id)}" alt="${buddy.name}"
+  // companion slot: the chosen pal (with level) — or today's buddy until one is chosen
+  const p = petInfo(d);
+  const companion = p ? { id: p.mon.id, label: `${p.mon.name} Lv${p.level}` }
+    : (buddyOfTheDay() ? { id: buddyOfTheDay().id, label: buddyOfTheDay().name } : null);
+  const buddyHTML = companion ? `
+    <button class="poke-buddy" id="pokeBuddyBtn" title="My Pokémon pal">
+      <img src="${POKE_ART(companion.id)}" alt="${companion.label}"
            onerror="this.style.display='none'" />
-      <span class="buddy-name">${buddy.name}</span>
-    </button>` : '';
+      <span class="buddy-name">${companion.label}</span>
+    </button>` : (d.caught.length ? `
+    <button class="poke-buddy" id="pokeBuddyBtn" title="Choose a pal">
+      <span class="buddy-name">💛 Pick a pal!</span>
+    </button>` : '');
   el.innerHTML = `${buddyHTML}
     <button class="poke-ball-btn ${d.balls > 0 ? 'ready' : ''}" id="pokeCatchBtn">
       <span class="pokeball"></span>
@@ -114,10 +150,8 @@ function renderRewards() {
     <button class="iconbtn small" id="pokeDexBtn">📕 <span class="lbl">Pokédex ${d.caught.length}/151</span></button>`;
   $('pokeCatchBtn').addEventListener('click', openCatch);
   $('pokeDexBtn').addEventListener('click', openDex);
-  if (buddy) $('pokeBuddyBtn').addEventListener('click', async () => {
-    await speak(`${buddy.name} says: let's learn together!`, 'en');
-    speak('一起加油！', 'zh');
-  });
+  const bb = $('pokeBuddyBtn');
+  if (bb) bb.addEventListener('click', openPet);   // companion opens the pal screen
 }
 
 /* ---------- catch ceremony ---------- */
@@ -184,6 +218,176 @@ function openDex() {
       <div class="dex-name">#${String(p.id).padStart(3, '0')}</div>
     </div>`).join('');
   show('screen-dex');
+}
+
+/* =========================================================================
+   💛 POKÉMON PAL — choose a caught Pokémon; feed / play / gift to level it
+   up. Care only ever ADDS (no hunger, no sadness — gentle by design).
+   Level = hearts/10 + 1 (max 10). Base forms evolve at Lv3, middle at Lv6.
+   ========================================================================= */
+function petLevel(h) { return Math.min(10, Math.floor(h / 10) + 1); }
+
+function petInfo(d) {
+  if (!d.pet) return null;
+  const mon = POKEMON.find((p) => p.id === d.pet);
+  const st = d.petStats[d.pet] || { h: 0, evos: 0 };
+  return { mon, h: st.h, evos: st.evos, level: petLevel(st.h) };
+}
+
+function openPet() { renderPet(); show('screen-pet'); }
+
+function renderPet() {
+  const d = rwState();
+  const area = $('petArea');
+  if (!d.caught.length) {
+    area.innerHTML = `<div class="pet-card"><div class="catch-caption">
+      Catch your first Pokémon to choose a pal! 先抓到宝可梦，才能选伙伴！</div></div>`;
+    return;
+  }
+  if (!d.pet) { renderPetChooser(); return; }
+
+  const p = petInfo(d);
+  const heartsInLevel = p.h % 10;
+  const full = '❤️'.repeat(heartsInLevel), empty = '🤍'.repeat(10 - heartsInLevel);
+  const maxed = p.level >= 10;
+  area.innerHTML = `
+    <div class="pet-card">
+      <img class="pet-img" id="petImg" src="${POKE_ART(p.mon.id)}" alt="${p.mon.name}"
+           onerror="this.style.display='none'" />
+      <div class="pet-name">${p.mon.name} · Lv ${p.level}${maxed ? ' 🏆 Best Friends!' : ''}</div>
+      <div class="pet-hearts">${maxed ? '❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️' : full + empty}</div>
+      <div class="pet-items">
+        ${Object.entries(CARE_ITEMS).map(([k, it]) => `
+          <button class="iconbtn pet-item ${(d.items[k] || 0) < 1 ? 'none-left' : ''}" data-item="${k}">
+            ${it.emoji}<span class="lbl">×${d.items[k] || 0}</span>
+          </button>`).join('')}
+      </div>
+      <p class="hint-line">🍎 +1❤️ · 🎾 +2❤️ · 🎁 +3❤️ — earn items by answering in any game!</p>
+      <button class="iconbtn small" id="petSwitch">🔄<span class="lbl">Choose another pal</span></button>
+    </div>`;
+  $('petImg').addEventListener('click', async () => {
+    bouncePet();
+    await speak(`${p.mon.name}!`, 'en');
+  });
+  area.querySelectorAll('.pet-item').forEach((b) => b.addEventListener('click', () => useItem(b.dataset.item)));
+  $('petSwitch').addEventListener('click', renderPetChooser);
+}
+
+function renderPetChooser() {
+  const d = rwState();
+  $('petArea').innerHTML = `
+    <p class="hint-line">Pick your pal! 选一个伙伴！ (hearts are saved for each one)</p>
+    <div class="dex-grid">${d.caught.map((id) => {
+      const p = POKEMON.find((x) => x.id === id);
+      const st = d.petStats[id];
+      return `
+      <div class="dex-cell caught pet-pick ${d.pet === id ? 'active-pet' : ''}" data-id="${id}">
+        <img loading="lazy" src="${POKE_ART(id)}" alt="${p.name}" />
+        <div class="dex-name">${p.name}${st ? ` · Lv ${petLevel(st.h)}` : ''}</div>
+      </div>`;
+    }).join('')}</div>`;
+  $('petArea').querySelectorAll('.pet-pick').forEach((el) => {
+    el.addEventListener('click', () => {
+      const d2 = rwState();
+      d2.pet = +el.dataset.id;
+      if (!d2.petStats[d2.pet]) d2.petStats[d2.pet] = { h: 0, evos: 0 };
+      rwSave(d2);
+      const mon = POKEMON.find((p) => p.id === d2.pet);
+      speak(`${mon.name}, I choose you!`, 'en');
+      renderPet(); renderRewards();
+    });
+  });
+}
+
+function bouncePet() {
+  const img = $('petImg'); if (!img) return;
+  img.classList.remove('pet-bounce'); void img.offsetWidth;
+  img.classList.add('pet-bounce');
+}
+
+function floatHeart(n) {
+  const img = $('petImg'); if (!img) return;
+  const r = img.getBoundingClientRect();
+  for (let i = 0; i < n; i++) {
+    const h = document.createElement('div');
+    h.className = 'float-heart';
+    h.textContent = '❤️';
+    h.style.left = (r.left + r.width * (0.3 + Math.random() * 0.4)) + 'px';
+    h.style.top = (r.top + r.height * 0.3) + 'px';
+    h.style.animationDelay = (i * 0.18) + 's';
+    document.body.appendChild(h);
+    setTimeout(() => h.remove(), 1600 + i * 180);
+  }
+}
+
+const CARE_LINES = {
+  berry: { en: (n) => `Yum yum! ${n} loves it!`,       zh: '好吃！' },
+  toy:   { en: (n) => `${n} is having so much fun!`,   zh: '好好玩！' },
+  gift:  { en: (n) => `${n} loves the present!`,       zh: '好开心！' }
+};
+
+async function useItem(kind) {
+  const d = rwState();
+  if (!d.pet || (d.items[kind] || 0) < 1) return;
+  d.items[kind]--;
+  const st = d.petStats[d.pet] || { h: 0, evos: 0 };
+  const before = petLevel(st.h);
+  st.h += CARE_ITEMS[kind].hearts;
+  d.petStats[d.pet] = st;
+  rwSave(d);
+  bouncePet();
+  floatHeart(CARE_ITEMS[kind].hearts);
+  const mon = POKEMON.find((p) => p.id === d.pet);
+  renderPet();
+  await speak(CARE_LINES[kind].en(mon.name), 'en');
+  speak(CARE_LINES[kind].zh, 'zh');
+  const after = petLevel(st.h);
+  if (after > before) {
+    confetti();
+    await speak(`Level ${after}!`, 'en');
+    maybeEvolve();
+  }
+}
+
+/* evolution: base form at Lv3+, evolved form at Lv6+ (never forced) */
+function maybeEvolve() {
+  const d = rwState();
+  const p = petInfo(d);
+  if (!p) return;
+  let next = EVOLVES[p.mon.id];
+  if (!next) return;
+  if (Array.isArray(next)) next = pick(next);            // Eevee!
+  const needLevel = 3 * (p.evos + 1);
+  if (p.level < needLevel) return;
+  evolveCeremony(p.mon, POKEMON.find((x) => x.id === next), p);
+}
+
+async function evolveCeremony(fromMon, toMon, p) {
+  // commit FIRST — state must be consistent even if speech/animation is interrupted
+  const d = rwState();
+  d.petStats[toMon.id] = { h: (d.petStats[fromMon.id] || { h: 0 }).h, evos: p.evos + 1 };
+  delete d.petStats[fromMon.id];
+  d.pet = toMon.id;
+  if (!d.caught.includes(toMon.id)) d.caught.push(toMon.id);   // evolutions fill the dex too!
+  rwSave(d);
+
+  $('catchStage').innerHTML = `
+    <img class="catch-img evolving" src="${POKE_ART(fromMon.id)}" alt="${fromMon.name}" />
+    <div class="catch-name">What?! <b>${fromMon.name}</b> is evolving!</div>`;
+  $('catchClose').style.display = 'none';
+  $('catchBack').classList.add('open');
+  catchMon = toMon;                                       // lets backdrop/close work
+  speak(`What? ${fromMon.name} is evolving!`, 'en');
+  await new Promise((r) => setTimeout(r, 1800));          // let the glow build
+  $('catchStage').innerHTML = `
+    <div class="catch-burst">✨✨✨</div>
+    <img class="catch-img legendary" src="${POKE_ART(toMon.id)}" alt="${toMon.name}" />
+    <div class="catch-name">🎉 ${fromMon.name} evolved into <b>${toMon.name}</b>!</div>`;
+  $('catchClose').style.display = '';
+  confetti();
+  renderPet(); renderRewards();                           // refresh UI before the speeches
+  await speak(`Congratulations! ${fromMon.name} evolved into ${toMon.name}!`, 'en');
+  speak('哇！进化了！太厉害了！', 'zh');
 }
 
 /* ---------- wire up ---------- */

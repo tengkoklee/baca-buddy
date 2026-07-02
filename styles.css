@@ -478,6 +478,63 @@ body.dys {
 .poke-buddy img { width: 52px; height: 52px; object-fit: contain; animation: bob 2.4s ease-in-out infinite; }
 .poke-buddy .buddy-name { font-size: 1rem; }
 
+/* ---------- Pokémon pal (pet) ---------- */
+.pet-card {
+  background: var(--card);
+  border: 5px solid var(--card-edge);
+  border-radius: 30px;
+  box-shadow: var(--shadow);
+  padding: clamp(18px, 3vw, 34px);
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  max-width: 620px; width: 100%; margin: 0 auto;
+  text-align: center;
+}
+.pet-img { width: 230px; height: 230px; object-fit: contain; cursor: pointer; animation: bob 3s ease-in-out infinite; }
+.pet-img.pet-bounce { animation: petbounce .6s ease; }
+@keyframes petbounce {
+  0%,100% { transform: none; }
+  30% { transform: translateY(-26px) scale(1.06); }
+  60% { transform: translateY(0) scale(.97); }
+  80% { transform: translateY(-8px); }
+}
+.pet-name { font-size: 1.6rem; font-weight: 700; }
+.pet-hearts { font-size: 1.25rem; letter-spacing: 2px; }
+.pet-items { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+.pet-item { font-size: 1.9rem; }
+.pet-item.none-left { opacity: .35; }
+.pet-pick.active-pet { border-color: #F5C518; background: #FFFBEA; }
+.float-heart {
+  position: fixed; z-index: 70; font-size: 1.8rem; pointer-events: none;
+  animation: heartup 1.4s ease-out forwards;
+}
+@keyframes heartup {
+  from { transform: translateY(0) scale(.7); opacity: 0; }
+  20% { opacity: 1; }
+  to { transform: translateY(-110px) scale(1.25); opacity: 0; }
+}
+.catch-img.evolving { animation: evolveflash 1.4s ease-in-out infinite; }
+@keyframes evolveflash {
+  0%,100% { filter: none; }
+  50% { filter: brightness(3) drop-shadow(0 0 30px #F5C518); }
+}
+
+/* ---------- toast pickups ---------- */
+.toast-box {
+  position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+  z-index: 65; display: flex; flex-direction: column; gap: 8px; align-items: center;
+  pointer-events: none;
+}
+.toast {
+  background: var(--card); border: 3px solid var(--card-edge);
+  border-radius: 999px; padding: 10px 22px;
+  font-weight: 700; font-size: 1.1rem;
+  box-shadow: var(--shadow);
+  animation: toastin .3s ease;
+  transition: opacity .5s ease, transform .5s ease;
+}
+.toast.gone { opacity: 0; transform: translateY(10px); }
+@keyframes toastin { from { opacity: 0; transform: translateY(14px); } }
+
 /* catch ceremony */
 .catch-sheet { text-align: center; }
 .catch-stage {

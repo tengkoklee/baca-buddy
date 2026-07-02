@@ -71,7 +71,7 @@ function speak(text, lang) {
     const finish = () => { if (!done) { done = true; resolve(); } };
     u.onend = finish; u.onerror = finish;
     speechSynthesis.speak(u);
-    setTimeout(finish, String(text).length * 500 + 2200);   // safety net if onend never fires
+    setTimeout(finish, Math.min(String(text).length * 400 + 2200, 8000));   // safety net if onend never fires (capped)
   });
 }
 

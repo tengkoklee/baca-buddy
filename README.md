@@ -46,6 +46,16 @@ Effort → ⭐ → Pokéballs → a Gen-1 Pokédex to fill (151):
 - artwork is hot-linked from the community PokeAPI sprites mirror (cached offline after
   first view) — personal/educational fan use; not for commercial distribution
 
+### 💛 Pokémon Pal (virtual pet)
+
+- choose any **caught** Pokémon as your pal (each remembers its own hearts)
+- care items drop as you play: every 4 ⭐ → 🍎 berry (+1❤️) / 🎾 toy (+2❤️) / 🎁 gift (+3❤️)
+- 10 ❤️ = 1 friendship level (Lv 10 = 🏆 Best Friends); care only ever ADDS —
+  the pal never gets hungry, sad, or sick (gentle-feedback principle)
+- **evolution**: base forms evolve at Lv 3, middle forms at Lv 6 (Charmander →
+  Charmeleon → Charizard; Eevee evolves randomly!) — evolutions also fill the Pokédex
+- a "Buddy of the Day" rotates daily through the collection until a pal is chosen
+
 ## Run it
 
 It's a plain web app — no install, no build.
