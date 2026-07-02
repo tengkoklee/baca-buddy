@@ -19,11 +19,15 @@ const shuffle = (arr) => {
 const ALL_WORDS = THEMES.flatMap((t) => t.words.map((w) => ({ ...w, themeId: t.id })));
 
 /* ---------- persistent state ---------- */
-const DEFAULTS = { speed: 0.75, font: 'lexend', lang: 'mix', sound: true };
+const DEFAULTS = { speed: 0.75, font: 'lexend', lang: 'en', sound: true };
 let state = loadState();
 
 function loadState() {
-  try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem('bacaBuddy') || '{}') }; }
+  try {
+    const s = { ...DEFAULTS, ...JSON.parse(localStorage.getItem('bacaBuddy') || '{}') };
+    if (!['en', 'zh', 'ms'].includes(s.lang)) s.lang = 'en';   // migrate away from old 'mix'
+    return s;
+  }
   catch (e) { return { ...DEFAULTS }; }
 }
 function saveState() {
@@ -67,13 +71,28 @@ function speak(text, lang) {
     const v = pickVoice(lang);
     if (v) { u.voice = v; u.lang = v.lang; } else { u.lang = LANGS[lang].tag; }
     u.rate = state.speed; u.pitch = 1.05;
-    let done = false;
+    let done = false, started = false;
     const finish = () => { if (!done) { done = true; resolve(); } };
+    u.onstart = () => { started = true; };
     u.onend = finish; u.onerror = finish;
     speechSynthesis.speak(u);
+    try { speechSynthesis.resume(); } catch (e) {}   // unstick the iOS/Chrome paused-synth bug
+    setTimeout(() => {                                // watchdog: if it never started, kick once
+      if (!started && !done) {
+        try { speechSynthesis.cancel(); speechSynthesis.resume(); speechSynthesis.speak(u); } catch (e) {}
+      }
+    }, 900);
     setTimeout(finish, Math.min(String(text).length * 400 + 2200, 8000));   // safety net if onend never fires (capped)
   });
 }
+
+/* returning from background can leave the synth permanently paused — reset it */
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && window.speechSynthesis) {
+    try { speechSynthesis.cancel(); speechSynthesis.resume(); } catch (e) {}
+    loadVoices();
+  }
+});
 
 /* text the TTS should read for a word in a given language */
 function spoken(word, lang) { return lang === 'zh' ? word.zh.w : (lang === 'ms' ? word.ms.w : word.en.w); }
@@ -84,7 +103,7 @@ function unlockAudio() {
   if (audioUnlocked || !window.speechSynthesis) return;
   audioUnlocked = true;
   try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {}
-  setTimeout(speakGreeting, 250);          // spoken hello rides on the first tap
+  speakGreeting();                         // spoken hello rides on the first tap (inside the gesture — iOS needs this)
 }
 document.addEventListener('pointerdown', unlockAudio, { once: true });
 
@@ -144,21 +163,39 @@ function show(screenId) {
 /* =========================================================================
    HOME
    ========================================================================= */
+/* Each activity belongs to specific language tracks — no mixed rotation.
+   'all' = works in whichever language is selected (Explore always shows the
+   three side-by-side, which is its cross-mapping purpose). */
 const MENU = [
-  { mode: 'explore', ico: '📖', t1: 'Explore',        t2: '看图学词 · Belajar', screen: 'flash'  },
-  { mode: 'listen',  ico: '👂', t1: 'Listen & Find',  t2: '听声音，找图片',      screen: 'listen' },
-  { mode: 'match',   ico: '🎯', t1: 'Match the Word',  t2: '图片配字',           screen: 'match'  },
-  { mode: 'build',   ico: '🔤', t1: 'Sound It Out',    t2: '拼出单词',           screen: 'build'  },
-  { mode: 'blend',   ico: '🧩', t1: 'Blend It',        t2: '拼音节 · Suku kata', screen: 'blend'  },
-  { mode: 'hunt',    ico: '🔍', t1: 'Sound Hunt',      t2: '听首音，找图片',      screen: 'hunt'   },
-  { mode: 'trace',   ico: '✍️', t1: 'Write 写字',      t2: '一笔一画描汉字',      screen: 'trace',    direct: true },
-  { mode: 'radical', ico: '🧱', t1: 'Build 拼字',      t2: '部件拼汉字',          screen: 'radical',  direct: true },
-  { mode: 'homo',    ico: '👯', t1: 'Same Sound 同音', t2: '同音字，选一选',      screen: 'homophone', direct: true },
-  { mode: 'fluent',  ico: '🏃', t1: 'Read Along',      t2: '朗读 · Baca lancar',  screen: 'fluent',   direct: true }
+  { mode: 'explore', ico: '📖', t1: 'Explore',        t2: '看图学词 · Belajar', screen: 'flash',  langs: 'all' },
+  { mode: 'listen',  ico: '👂', t1: 'Listen & Find',  t2: '听声音，找图片',      screen: 'listen', langs: 'all' },
+  { mode: 'match',   ico: '🎯', t1: 'Match the Word',  t2: '图片配字',           screen: 'match',  langs: 'all' },
+  { mode: 'build',   ico: '🔤', t1: 'Sound It Out',    t2: 'Eja perkataan',      screen: 'build',  langs: ['en', 'ms'] },
+  { mode: 'blend',   ico: '🧩', t1: 'Blend It',        t2: 'Suku kata',          screen: 'blend',  langs: ['en', 'ms'] },
+  { mode: 'hunt',    ico: '🔍', t1: 'Sound Hunt',      t2: 'Cari bunyi',         screen: 'hunt',   langs: ['en', 'ms'] },
+  { mode: 'fluent',  ico: '🏃', t1: 'Read Along',      t2: 'Baca lancar',        screen: 'fluent', langs: ['en', 'ms'], direct: true },
+  { mode: 'trace',   ico: '✍️', t1: 'Write 写字',      t2: '一笔一画描汉字',      screen: 'trace',    langs: ['zh'], direct: true },
+  { mode: 'radical', ico: '🧱', t1: 'Build 拼字',      t2: '部件拼汉字',          screen: 'radical',  langs: ['zh'], direct: true },
+  { mode: 'homo',    ico: '👯', t1: 'Same Sound 同音', t2: '同音字，选一选',      screen: 'homophone', langs: ['zh'], direct: true }
 ];
 
+function renderLangTabs() {
+  const el = $('langTabs'); if (!el) return;
+  el.innerHTML = ['en', 'zh', 'ms'].map((l) => `
+    <button class="lang-tab ${state.lang === l ? 'on' : ''}" data-lang="${l}"
+            style="--tabc:${LANGS[l].colour}">
+      ${l === 'en' ? '🇬🇧 English' : (l === 'zh' ? '🇨🇳 中文' : '🇲🇾 Melayu')}
+    </button>`).join('');
+  el.querySelectorAll('.lang-tab').forEach((b) => b.addEventListener('click', () => {
+    state.lang = b.dataset.lang; saveState();
+    renderLangTabs(); buildHome();
+    speak(b.dataset.lang === 'en' ? 'English!' : (b.dataset.lang === 'zh' ? '中文！' : 'Bahasa Melayu!'), b.dataset.lang);
+  }));
+}
+
 function buildHome() {
-  $('menuGrid').innerHTML = MENU.map((m) => `
+  const items = MENU.filter((m) => m.langs === 'all' || m.langs.includes(state.lang));
+  $('menuGrid').innerHTML = items.map((m) => `
     <div class="menu-card" data-mode="${m.mode}">
       <div class="ico">${m.ico}</div>
       <div class="t1">${m.t1}</div>
@@ -210,11 +247,27 @@ function startMode(mode, theme) {
   else if (mode === 'fluent') { startFluent(); }
 }
 
-/* choose the practise language for a question */
+/* the practise language is now a single, explicit choice (home-screen tabs) */
 function questionLang(allowZh = true) {
-  if (state.lang === 'mix') return pick(allowZh ? ['en', 'zh', 'ms'] : ['en', 'ms']);
-  if (!allowZh && state.lang === 'zh') return pick(['en', 'ms']);
+  if (!allowZh && state.lang === 'zh') return 'en';   // safety net; zh-only games are hidden anyway
   return state.lang;
+}
+
+/* ---------- no-repeat shuffle bags: cycle the whole pool before repeating ---------- */
+const _bags = {};
+function bagPick(key, arr) {
+  if (!arr || !arr.length) return undefined;
+  const st = _bags[key] = _bags[key] || { order: [], last: -1, n: arr.length };
+  if (st.n !== arr.length) { st.order = []; st.n = arr.length; }   // pool changed → rebuild
+  if (!st.order.length) {
+    st.order = shuffle(arr.map((_, i) => i));
+    // don't let the new cycle start with the item that just ended the old one
+    if (arr.length > 1 && st.order[st.order.length - 1] === st.last) {
+      const t = st.order[0]; st.order[0] = st.order[st.order.length - 1]; st.order[st.order.length - 1] = t;
+    }
+  }
+  st.last = st.order.pop();
+  return arr[st.last];
 }
 
 /* =========================================================================
@@ -277,7 +330,7 @@ function pickChoices(correct, n, pool) {
 function nextListen() {
   const lang = questionLang(true);
   ctx.curLang = lang;
-  const correct = pick(ctx.theme.words);
+  const correct = bagPick('listen:' + ctx.theme.id + ':' + lang, ctx.theme.words);
   ctx.answer = correct;
   const choices = pickChoices(correct, Math.min(4, ctx.theme.words.length), ctx.theme.words);
 
@@ -315,7 +368,7 @@ async function answerListen(el, word) {
 function nextMatch() {
   const lang = questionLang(true);
   ctx.curLang = lang;
-  const correct = pick(ctx.theme.words);
+  const correct = bagPick('match:' + ctx.theme.id + ':' + lang, ctx.theme.words);
   ctx.answer = correct;
   const choices = pickChoices(correct, Math.min(4, ctx.theme.words.length), ctx.theme.words);
 
@@ -350,7 +403,7 @@ async function answerMatch(el, word) {
 function nextBuild() {
   const lang = questionLang(false);        // no Chinese letter-building
   ctx.curLang = lang;
-  const word = pick(ctx.theme.words);
+  const word = bagPick('build:' + ctx.theme.id + ':' + lang, ctx.theme.words);
   ctx.answer = word;
   const target = (lang === 'ms' ? word.ms.w : word.en.w).toLowerCase().replace(/\s+/g, '');
   ctx.target = target;
@@ -473,12 +526,14 @@ function confetti() {
    SETTINGS
    ========================================================================= */
 function applyFont() { document.body.classList.toggle('dys', state.font === 'dys'); }
-function applySound() { $('soundBtn').textContent = state.sound ? '🔊' : '🔇'; }
+function applySound() {
+  $('soundBtn').textContent = state.sound ? '🔊' : '🔇';
+  $('soundBtn').classList.toggle('muted', !state.sound);   // obvious amber warning when muted
+}
 
 function refreshSettingsUI() {
   $('segSpeed').querySelectorAll('button').forEach((b) => b.classList.toggle('on', +b.dataset.speed === state.speed));
   $('segFont').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.font === state.font));
-  $('segLang').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.lang === state.lang));
 }
 
 function updateVoiceNote() {
@@ -503,6 +558,7 @@ function closeSheet() { $('sheetBack').classList.remove('open'); }
 function init() {
   applyFont(); applySound();
   renderGreeting();
+  renderLangTabs();
   buildHome();
 
   $('homeBtn').addEventListener('click', goHome);
@@ -534,9 +590,6 @@ function init() {
   }));
   $('segFont').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
     state.font = b.dataset.font; applyFont(); saveState(); refreshSettingsUI();
-  }));
-  $('segLang').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
-    state.lang = b.dataset.lang; saveState(); refreshSettingsUI();
   }));
 
   goHome();

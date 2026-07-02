@@ -18,7 +18,7 @@ let hunt = null;   // { lang, letter, target, choices }
 function nextHunt() {
   const lang = questionLang(false);                    // alphabetic langs only
   const words = ctx.theme.words;
-  const target = pick(words);
+  const target = bagPick('hunt:' + ctx.theme.id + ':' + lang, words);
   const letter = spoken(target, lang)[0].toLowerCase();
   // distractors must start with a DIFFERENT letter (that's the whole game)
   const wrong = shuffle(words.filter((w) => spoken(w, lang)[0].toLowerCase() !== letter)).slice(0, 2);

@@ -419,6 +419,40 @@ body.dys {
   border-radius: 999px; padding: 5px 14px; font-weight: 700;
 }
 
+/* ---------- language tabs (one language at a time — no mixing) ---------- */
+.lang-tabs { display: flex; gap: 12px; margin-bottom: var(--gap); }
+.lang-tab {
+  flex: 1; min-height: 64px;
+  border: 4px solid var(--card-edge); background: var(--card);
+  border-radius: 18px;
+  font-family: inherit; font-weight: 700; font-size: clamp(1.05rem, 2.6vw, 1.35rem);
+  color: var(--ink); cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: transform .08s ease;
+}
+.lang-tab:active { transform: translateY(3px); }
+.lang-tab.on {
+  border-color: var(--tabc);
+  color: var(--tabc);
+  background: #fff;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.08), 0 0 0 3px var(--tabc) inset;
+}
+
+/* ---------- muted warning ---------- */
+#soundBtn.muted { background: var(--soft-bg); border-color: var(--soft); }
+
+/* ---------- wandering companion ---------- */
+.companion {
+  position: fixed; top: 0; left: 0; z-index: 40;
+  pointer-events: none;                    /* only the sprite itself is tappable */
+  will-change: transform;
+}
+.companion img {
+  width: 84px; height: 84px; object-fit: contain;
+  pointer-events: auto; cursor: pointer;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,.2));
+}
+
 /* ---------- personal greeting ---------- */
 .greet {
   font-size: clamp(1.3rem, 3.4vw, 1.9rem);

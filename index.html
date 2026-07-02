@@ -41,6 +41,7 @@
     <!-- ============ HOME ============ -->
     <section class="screen active" id="screen-home">
       <div class="greet" id="greetBar"></div>
+      <div class="lang-tabs" id="langTabs"></div>
       <div class="dose-bar" id="doseBar"></div>
       <div class="dose-bar poke-strip" id="pokeStrip"></div>
       <div class="menu-grid" id="menuGrid"><!-- built by app.js --></div>
@@ -184,7 +185,7 @@
     <!-- ============ READ ALONG (fluency) ============ -->
     <section class="screen" id="screen-fluent">
       <div class="screen-title"><span class="big">🏃</span> <span>Read Along</span>
-        <span class="seg flu-langs" id="fluLangBtns">
+        <span class="seg flu-langs" id="fluLangBtns" style="display:none">
           <button data-lang="ms">BM</button>
           <button data-lang="en">EN</button>
         </span>
@@ -242,16 +243,6 @@
         </div>
       </div>
 
-      <div class="set-row">
-        <div class="label">🗣️ Practise language (games)</div>
-        <div class="seg" id="segLang">
-          <button data-lang="en">EN</button>
-          <button data-lang="zh">中文</button>
-          <button data-lang="ms">BM</button>
-          <button data-lang="mix">🎲 Mix</button>
-        </div>
-      </div>
-
       <button class="iconbtn" id="sheetClose" style="width:100%; margin-top:8px;"><span class="lbl">Done ✓</span></button>
       <p class="hint-line" id="voiceNote"></p>
     </div>
@@ -265,6 +256,7 @@
     </div>
   </div>
 
+  <div class="companion" id="companion" style="display:none"><img alt="learning pal" /></div>
   <div class="toast-box" id="toastBox"></div>
   <div class="confetti" id="confetti"></div>
 

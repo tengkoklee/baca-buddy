@@ -152,6 +152,7 @@ function renderRewards() {
   $('pokeDexBtn').addEventListener('click', openDex);
   const bb = $('pokeBuddyBtn');
   if (bb) bb.addEventListener('click', openPet);   // companion opens the pal screen
+  updateCompanion();                               // keep the wandering pal in sync
 }
 
 /* ---------- catch ceremony ---------- */
@@ -390,9 +391,65 @@ async function evolveCeremony(fromMon, toMon, p) {
   speak('哇！进化了！太厉害了！', 'zh');
 }
 
+/* =========================================================================
+   🚶 WANDERING COMPANION — the chosen pal strolls around the screen
+   Gentle random walk in the lower half; tap it → it cheers and hops away.
+   ========================================================================= */
+let compTimer = null;
+let compX = 0;
+
+function updateCompanion() {
+  const el = $('companion'); if (!el) return;
+  const p = petInfo(rwState());
+  if (!p) {
+    el.style.display = 'none';
+    if (compTimer) { clearInterval(compTimer); compTimer = null; }
+    return;
+  }
+  const img = el.querySelector('img');
+  const art = POKE_ART(p.mon.id);
+  if (!img.src.endsWith(`/${p.mon.id}.png`)) img.src = art;
+  if (el.style.display === 'none') {
+    el.style.display = '';
+    wanderCompanion(true);                 // appear somewhere sensible immediately
+  }
+  if (!compTimer) compTimer = setInterval(wanderCompanion, 6500);
+}
+
+function wanderCompanion(jump = false) {
+  const el = $('companion');
+  if (!el || el.style.display === 'none' || document.visibilityState !== 'visible') return;
+  const W = window.innerWidth, H = window.innerHeight;
+  const x = 8 + Math.random() * Math.max(60, W - 100);
+  const y = H * 0.55 + Math.random() * Math.max(40, H * 0.4 - 100);
+  el.style.transition = jump ? 'none' : 'transform 3.6s ease-in-out';
+  el.style.transform = `translate(${x}px, ${y}px)`;
+  el.querySelector('img').style.transform = x > compX ? 'scaleX(-1)' : '';   // face the way it walks
+  compX = x;
+}
+
+const COMPANION_LINES = [
+  { en: 'You can do it!',      zh: '加油！' },
+  { en: "Let's learn!",        zh: '一起学习！' },
+  { en: 'You are doing great!', zh: '你很棒！' }
+];
+
+async function pokeCompanion() {
+  const p = petInfo(rwState()); if (!p) return;
+  const img = $('companion').querySelector('img');
+  img.classList.remove('pet-bounce'); void img.offsetWidth;
+  img.classList.add('pet-bounce');
+  wanderCompanion();                        // hop away to a new spot
+  const line = pick(COMPANION_LINES);
+  await speak(`${p.mon.name} says: ${line.en}`, 'en');
+  speak(line.zh, 'zh');
+}
+
 /* ---------- wire up ---------- */
 document.addEventListener('DOMContentLoaded', () => {
   renderRewards();
+  updateCompanion();
+  $('companion').querySelector('img').addEventListener('click', pokeCompanion);
   $('catchClose').addEventListener('click', closeCatch);
   $('catchBack').addEventListener('click', (e) => { if (e.target === $('catchBack') && catchMon) closeCatch(); });
   setInterval(checkGoalBall, 15000);

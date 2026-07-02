@@ -119,7 +119,7 @@ function traceStep(dir) {
 let rad = null;   // { item, remaining: {part: count}, placed: [], tray: [] }
 
 function nextRadical() {
-  const item = pick(COMPONENT_CHARS);
+  const item = bagPick('radical', COMPONENT_CHARS);
   const remaining = {};
   item.parts.forEach((p) => remaining[p] = (remaining[p] || 0) + 1);
   const distractors = shuffle(RADICAL_POOL.filter((p) => !item.parts.includes(p))).slice(0, 2);
@@ -181,7 +181,7 @@ async function placeRadical(tileEl) {
 let homo = null;  // { set, target }
 
 function nextHomo() {
-  const set = pick(HOMOPHONE_SETS);
+  const set = bagPick('homo', HOMOPHONE_SETS);
   const target = pick(set.opts);
   homo = { set, target };
   $('homoStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5));
@@ -225,7 +225,7 @@ let blend = null;  // { word, lang, syls, slots, tray }
 function nextBlend() {
   const lang = questionLang(false);
   const multi = ctx.theme.words.filter((w) => (lang === 'ms' ? w.ms.syl : w.en.syl).length >= 2);
-  const word = pick(multi.length ? multi : ctx.theme.words);
+  const word = bagPick('blend:' + ctx.theme.id + ':' + lang, multi.length ? multi : ctx.theme.words);
   const syls = (lang === 'ms' ? w2syl(word, 'ms') : w2syl(word, 'en')).slice();
   // one distractor syllable from a different word
   const other = pick(ctx.theme.words.filter((w) => w.emoji !== word.emoji));

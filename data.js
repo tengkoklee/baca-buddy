@@ -32,7 +32,19 @@ const THEMES = [
       { emoji: '🐘', en: { w: 'elephant', syl: ['el', 'e', 'phant'] }, zh: { w: '大象', py: 'dà xiàng' }, ms: { w: 'gajah',   syl: ['ga', 'jah'] } },
       { emoji: '🐵', en: { w: 'monkey',   syl: ['mon', 'key'] },     zh: { w: '猴子', py: 'hóu zi' },     ms: { w: 'monyet',  syl: ['mo', 'nyet'] } },
       { emoji: '🐯', en: { w: 'tiger',    syl: ['ti', 'ger'] },      zh: { w: '老虎', py: 'lǎo hǔ' },     ms: { w: 'harimau', syl: ['ha', 'ri', 'mau'] } },
-      { emoji: '🐰', en: { w: 'rabbit',   syl: ['rab', 'bit'] },     zh: { w: '兔子', py: 'tù zi' },      ms: { w: 'arnab',   syl: ['ar', 'nab'] } }
+      { emoji: '🐰', en: { w: 'rabbit',   syl: ['rab', 'bit'] },     zh: { w: '兔子', py: 'tù zi' },      ms: { w: 'arnab',   syl: ['ar', 'nab'] } },
+      { emoji: '🦆', en: { w: 'duck',     syl: ['duck'] },           zh: { w: '鸭子', py: 'yā zi' },      ms: { w: 'itik',    syl: ['i', 'tik'] } },
+      { emoji: '🐐', en: { w: 'goat',     syl: ['goat'] },           zh: { w: '山羊', py: 'shān yáng' },  ms: { w: 'kambing', syl: ['kam', 'bing'] } },
+      { emoji: '🐍', en: { w: 'snake',    syl: ['snake'] },          zh: { w: '蛇',   py: 'shé' },        ms: { w: 'ular',    syl: ['u', 'lar'] } },
+      { emoji: '🦋', en: { w: 'butterfly', syl: ['but', 'ter', 'fly'] }, zh: { w: '蝴蝶', py: 'hú dié' }, ms: { w: 'rama-rama', syl: ['ra', 'ma', 'ra', 'ma'] } },
+      { emoji: '🐜', en: { w: 'ant',      syl: ['ant'] },            zh: { w: '蚂蚁', py: 'mǎ yǐ' },      ms: { w: 'semut',   syl: ['se', 'mut'] } },
+      { emoji: '🐻', en: { w: 'bear',     syl: ['bear'] },           zh: { w: '熊',   py: 'xióng' },      ms: { w: 'beruang', syl: ['be', 'ru', 'ang'] } },
+      { emoji: '🦁', en: { w: 'lion',     syl: ['li', 'on'] },       zh: { w: '狮子', py: 'shī zi' },     ms: { w: 'singa',   syl: ['si', 'nga'] } },
+      { emoji: '🐸', en: { w: 'frog',     syl: ['frog'] },           zh: { w: '青蛙', py: 'qīng wā' },    ms: { w: 'katak',   syl: ['ka', 'tak'] } },
+      { emoji: '🐭', en: { w: 'mouse',    syl: ['mouse'] },          zh: { w: '老鼠', py: 'lǎo shǔ' },    ms: { w: 'tikus',   syl: ['ti', 'kus'] } },
+      { emoji: '🦀', en: { w: 'crab',     syl: ['crab'] },           zh: { w: '螃蟹', py: 'páng xiè' },   ms: { w: 'ketam',   syl: ['ke', 'tam'] } },
+      { emoji: '🐢', en: { w: 'turtle',   syl: ['tur', 'tle'] },     zh: { w: '乌龟', py: 'wū guī' },     ms: { w: 'kura-kura', syl: ['ku', 'ra', 'ku', 'ra'] } },
+      { emoji: '🐝', en: { w: 'bee',      syl: ['bee'] },            zh: { w: '蜜蜂', py: 'mì fēng' },    ms: { w: 'lebah',   syl: ['le', 'bah'] } }
     ]
   },
   {
@@ -48,7 +60,13 @@ const THEMES = [
       { emoji: '🍊', en: { w: 'orange',  syl: ['or', 'ange'] },    zh: { w: '橙',   py: 'chéng' },      ms: { w: 'oren',  syl: ['o', 'ren'] } },
       { emoji: '🐔', en: { w: 'chicken', syl: ['chick', 'en'] },   zh: { w: '鸡',   py: 'jī' },         ms: { w: 'ayam',  syl: ['a', 'yam'] } },
       { emoji: '💧', en: { w: 'water',   syl: ['wa', 'ter'] },     zh: { w: '水',   py: 'shuǐ' },       ms: { w: 'air',   syl: ['a', 'ir'] } },
-      { emoji: '🍰', en: { w: 'cake',    syl: ['cake'] },          zh: { w: '蛋糕', py: 'dàn gāo' },    ms: { w: 'kek',   syl: ['kek'] } }
+      { emoji: '🍰', en: { w: 'cake',    syl: ['cake'] },          zh: { w: '蛋糕', py: 'dàn gāo' },    ms: { w: 'kek',   syl: ['kek'] } },
+      { emoji: '🍉', en: { w: 'watermelon', syl: ['wa', 'ter', 'me', 'lon'] }, zh: { w: '西瓜', py: 'xī guā' }, ms: { w: 'tembikai', syl: ['tem', 'bi', 'kai'] } },
+      { emoji: '🥭', en: { w: 'mango',   syl: ['man', 'go'] },     zh: { w: '芒果', py: 'máng guǒ' },   ms: { w: 'mangga', syl: ['mang', 'ga'] } },
+      { emoji: '🍜', en: { w: 'noodles', syl: ['noo', 'dles'] },   zh: { w: '面条', py: 'miàn tiáo' },  ms: { w: 'mi',    syl: ['mi'] } },
+      { emoji: '🍵', en: { w: 'tea',     syl: ['tea'] },           zh: { w: '茶',   py: 'chá' },        ms: { w: 'teh',   syl: ['teh'] } },
+      { emoji: '🍬', en: { w: 'sweet',   syl: ['sweet'] },         zh: { w: '糖果', py: 'táng guǒ' },   ms: { w: 'gula-gula', syl: ['gu', 'la', 'gu', 'la'] } },
+      { emoji: '🥥', en: { w: 'coconut', syl: ['co', 'co', 'nut'] }, zh: { w: '椰子', py: 'yē zi' },    ms: { w: 'kelapa', syl: ['ke', 'la', 'pa'] } }
     ]
   },
   {
