@@ -415,6 +415,7 @@ function disableChoices(gridId) {
 async function celebrate() {
   ctx.streak++;
   confetti();
+  if (typeof addStar === 'function') addStar();   // Pokémon reward system (rewards.js)
   const p = pick(PRAISE);
   await speak(p.en, 'en');
   await speak(p.zh, 'zh');

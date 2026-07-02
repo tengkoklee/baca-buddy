@@ -41,8 +41,15 @@
     <!-- ============ HOME ============ -->
     <section class="screen active" id="screen-home">
       <div class="dose-bar" id="doseBar"></div>
+      <div class="dose-bar poke-strip" id="pokeStrip"></div>
       <div class="menu-grid" id="menuGrid"><!-- built by app.js --></div>
       <p class="hint-line">Tap a picture and I'll read it to you. 点一点图片，我会读给你听。</p>
+    </section>
+
+    <!-- ============ POKÉDEX ============ -->
+    <section class="screen" id="screen-dex">
+      <div class="screen-title"><span class="big">📕</span> <span>Pokédex</span> <span class="dex-count" id="dexCount"></span></div>
+      <div class="dex-grid" id="dexGrid"></div>
     </section>
 
     <!-- ============ THEME PICKER ============ -->
@@ -243,6 +250,14 @@
     </div>
   </div>
 
+  <!-- ============ CATCH CEREMONY OVERLAY ============ -->
+  <div class="sheet-back" id="catchBack">
+    <div class="sheet catch-sheet">
+      <div class="catch-stage" id="catchStage"></div>
+      <button class="iconbtn" id="catchClose" style="width:100%; margin-top:14px; display:none;"><span class="lbl">Yay! ✓</span></button>
+    </div>
+  </div>
+
   <div class="confetti" id="confetti"></div>
 
   <!-- stroke-order engine + per-character stroke data are vendored locally
@@ -250,9 +265,11 @@
   <script src="vendor/hanzi-writer.min.js"></script>
   <script src="data.js"></script>
   <script src="data2.js"></script>
+  <script src="data-pokemon.js"></script>
   <script src="app.js"></script>
   <script src="games2.js"></script>
   <script src="games3.js"></script>
+  <script src="rewards.js"></script>
   <script>
     // PWA: register the service worker (needs HTTPS or localhost)
     if ('serviceWorker' in navigator) {

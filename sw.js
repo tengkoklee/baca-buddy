@@ -1,8 +1,8 @@
 /* Baca Buddy service worker — full offline support.
    Bump VERSION whenever any app file changes: the new SW re-precaches
    everything and old caches are dropped on activate. */
-const VERSION = 'baca-v1';
-const RUNTIME = 'baca-runtime-v1';
+const VERSION = 'baca-v2';
+const RUNTIME = 'baca-runtime-v2';
 
 const CORE = [
   '.',
@@ -13,6 +13,8 @@ const CORE = [
   'app.js',
   'games2.js',
   'games3.js',
+  'data-pokemon.js',
+  'rewards.js',
   'manifest.json',
   'vendor/hanzi-writer.min.js',
   'icons/icon-180.png',
@@ -53,7 +55,8 @@ self.addEventListener('fetch', (e) => {
     try {
       const res = await fetch(req);
       if (res && res.ok && (req.url.startsWith(self.location.origin)
-          || req.url.includes('fonts.g') || req.url.includes('jsdelivr'))) {
+          || req.url.includes('fonts.g') || req.url.includes('jsdelivr')
+          || req.url.includes('raw.githubusercontent.com'))) {   // Pokémon art: cached after first view
         const rt = await caches.open(RUNTIME);
         rt.put(req, res.clone());
       }

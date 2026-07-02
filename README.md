@@ -36,6 +36,16 @@ English & Chinese well but finds *reading* hard — so every word is shown as a
 Plus a **⏱️ practice tracker** on the home screen (🔥 streak · daily 10-min goal · total hours)
 — engineering the >15-hour cumulative dose the trials say is needed for measurable effects.
 
+## 🔴 Pokémon reward system
+
+Effort → ⭐ → Pokéballs → a Gen-1 Pokédex to fill (151):
+- every correct answer = 1 ⭐ (stars are never taken away — gentle-feedback principle)
+- 10 ⭐ = 1 Pokéball; hitting the 10-min daily goal = 1 bonus ball per day
+- first catch is always **Pikachu**; no duplicates until the dex is complete
+- legendaries (Articuno/Zapdos/Moltres/Mewtwo/Mew) unlock at 25/50/75/100/125 caught
+- artwork is hot-linked from the community PokeAPI sprites mirror (cached offline after
+  first view) — personal/educational fan use; not for commercial distribution
+
 ## Run it
 
 It's a plain web app — no install, no build.
