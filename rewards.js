@@ -12,7 +12,7 @@
 'use strict';
 
 const STARS_PER_BALL = 10;
-const LEGENDARY_MILESTONES = [25, 50, 75, 100, 125];
+const LEGENDARY_EVERY = 25;   // every 25 catches arms a guaranteed-legendary ball
 
 /* ---------- persistent reward state ---------- */
 function rwLoad() {
@@ -108,7 +108,7 @@ function doCatch() {
   if (mon.tier === 'legendary' && d.legendaryPending > 0) d.legendaryPending--;
   if (!d.caught.includes(mon.id)) d.caught.push(mon.id);
   // collection milestone → arm a guaranteed-legendary ball
-  if (LEGENDARY_MILESTONES.includes(d.caught.length)) { d.legendaryPending++; d.balls++; }
+  if (d.caught.length > 0 && d.caught.length % LEGENDARY_EVERY === 0) { d.legendaryPending++; d.balls++; }
   rwSave(d);
   return mon;
 }
@@ -147,7 +147,7 @@ function renderRewards() {
     </button>
     <span class="dose-meter poke-meter"><span class="dose-fill" style="width:${pct}%"></span></span>
     <span class="dose-item">⭐ ${d.stars}</span>
-    <button class="iconbtn small" id="pokeDexBtn">📕 <span class="lbl">Pokédex ${d.caught.length}/151</span></button>`;
+    <button class="iconbtn small" id="pokeDexBtn">📕 <span class="lbl">Pokédex ${d.caught.length}/${POKEMON.length}</span></button>`;
   $('pokeCatchBtn').addEventListener('click', openCatch);
   $('pokeDexBtn').addEventListener('click', openDex);
   const bb = $('pokeBuddyBtn');
@@ -209,7 +209,7 @@ function closeCatch() {
 function openDex() {
   const d = rwState();
   const caught = new Set(d.caught);
-  $('dexCount').textContent = `${d.caught.length} / 151`;
+  $('dexCount').textContent = `${d.caught.length} / ${POKEMON.length}`;
   $('dexGrid').innerHTML = POKEMON.map((p) => caught.has(p.id) ? `
     <div class="dex-cell caught">
       <img loading="lazy" src="${POKE_ART(p.id)}" alt="${p.name}" />
@@ -467,15 +467,34 @@ function updateCompanion() {
   if (!compTimer) companionLoop();
 }
 
-/* the behaviour brain: walk / idle / hop, then think again */
+/* ambient chirp: soft, occasional, and NEVER over learning audio */
+let lastChirp = 0;
+function maybeChirp() {
+  const p = petInfo(rwState()); if (!p) return;
+  if (Date.now() - lastChirp < 12000) return;              // breathing room
+  if (!state.sound) return;
+  if (!clipEl.paused) return;                              // a word is being spoken
+  if (!cryEl.paused) return;                               // already chirping/crying
+  try { if (speechSynthesis.speaking) return; } catch (e) {}
+  lastChirp = Date.now();
+  try {
+    cryEl.onended = cryEl.onerror = null;
+    cryEl.src = POKE_CHIRP(p.mon.id);
+    cryEl.volume = 0.4;                                    // soft background chirp
+    cryEl.play().catch(() => {});
+  } catch (e) {}
+}
+
+/* the behaviour brain: walk / idle / hop / chirp, then think again */
 function companionLoop() {
   const el = $('companion');
   if (!el || el.style.display === 'none') { compTimer = null; return; }
   let waitMs = 1200 + Math.random() * 1800;                // default: stand and idle
   if (document.visibilityState === 'visible' && !compWalking) {
     const roll = Math.random();
-    if (roll < 0.6) waitMs = walkSomewhere() + 400;        // amble to a new spot
-    else if (roll < 0.8) { hopCompanion(); waitMs = 1400; }
+    if (roll < 0.55) waitMs = walkSomewhere() + 400;       // amble to a new spot
+    else if (roll < 0.75) { hopCompanion(); maybeChirp(); waitMs = 1400; }
+    else if (roll < 0.9) { maybeChirp(); }                 // stand + say "Pika pika!"
     // else: just stand there being alive (the gif idles by itself)
   }
   compTimer = setTimeout(companionLoop, waitMs);

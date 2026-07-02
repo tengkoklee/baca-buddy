@@ -3,8 +3,8 @@
    everything and old caches are dropped on activate. */
 importScripts('audio-manifest.js');   // AUDIO_MAP: bundled speech clips
 
-const VERSION = 'baca-v13';
-const RUNTIME = 'baca-runtime-v13';
+const VERSION = 'baca-v14';
+const RUNTIME = 'baca-runtime-v14';
 
 const CORE = [
   '.',
@@ -41,11 +41,13 @@ self.addEventListener('install', (e) => {
     // bundled speech clips (~5.6 MB) — the app speaks fully offline
     await Promise.allSettled(Object.values(AUDIO_MAP).map((p) =>
       cache.add(p).catch(() => null)));
-    // Pokémon cries (Gen-1, ~1.2 MB) + generated name-voices (~2.2 MB)
-    await Promise.allSettled(Array.from({ length: 151 }, (_, i) =>
+    // full-dex Pokémon audio: cries + name-voices + ambient chirps (all 1025)
+    await Promise.allSettled(Array.from({ length: 1025 }, (_, i) =>
       cache.add(`cries/${i + 1}.mp3`).catch(() => null)));
-    await Promise.allSettled(Array.from({ length: 151 }, (_, i) =>
+    await Promise.allSettled(Array.from({ length: 1025 }, (_, i) =>
       cache.add(`voices/${i + 1}.m4a`).catch(() => null)));
+    await Promise.allSettled(Array.from({ length: 1025 }, (_, i) =>
+      cache.add(`chirps/${i + 1}.m4a`).catch(() => null)));
     self.skipWaiting();
   })());
 });
