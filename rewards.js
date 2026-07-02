@@ -83,13 +83,28 @@ function doCatch() {
   return mon;
 }
 
+/* ---------- buddy of the day: rotates daily through HIS caught Pokémon ---------- */
+function buddyOfTheDay() {
+  const d = rwState();
+  if (!d.caught.length) return null;
+  const day = Math.floor(Date.now() / 86400000);        // changes at midnight
+  return POKEMON.find((p) => p.id === d.caught[day % d.caught.length]) || null;
+}
+
 /* ---------- home-screen strip ---------- */
 function renderRewards() {
   const el = $('pokeStrip'); if (!el) return;
   const d = rwState();
   const toNext = STARS_PER_BALL - (d.stars % STARS_PER_BALL);
   const pct = Math.round(100 * (d.stars % STARS_PER_BALL) / STARS_PER_BALL);
-  el.innerHTML = `
+  const buddy = buddyOfTheDay();
+  const buddyHTML = buddy ? `
+    <button class="poke-buddy" id="pokeBuddyBtn" title="Today's buddy">
+      <img src="${POKE_ART(buddy.id)}" alt="${buddy.name}"
+           onerror="this.style.display='none'" />
+      <span class="buddy-name">${buddy.name}</span>
+    </button>` : '';
+  el.innerHTML = `${buddyHTML}
     <button class="poke-ball-btn ${d.balls > 0 ? 'ready' : ''}" id="pokeCatchBtn">
       <span class="pokeball"></span>
       <span class="lbl">${d.balls > 0 ? `Open! ×${d.balls}` : `${toNext} ⭐ to go`}</span>
@@ -99,6 +114,10 @@ function renderRewards() {
     <button class="iconbtn small" id="pokeDexBtn">📕 <span class="lbl">Pokédex ${d.caught.length}/151</span></button>`;
   $('pokeCatchBtn').addEventListener('click', openCatch);
   $('pokeDexBtn').addEventListener('click', openDex);
+  if (buddy) $('pokeBuddyBtn').addEventListener('click', async () => {
+    await speak(`${buddy.name} says: let's learn together!`, 'en');
+    speak('一起加油！', 'zh');
+  });
 }
 
 /* ---------- catch ceremony ---------- */
