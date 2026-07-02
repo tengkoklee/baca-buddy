@@ -3,8 +3,8 @@
    everything and old caches are dropped on activate. */
 importScripts('audio-manifest.js');   // AUDIO_MAP: bundled speech clips
 
-const VERSION = 'baca-v15';
-const RUNTIME = 'baca-runtime-v15';
+const VERSION = 'baca-v16';
+const RUNTIME = 'baca-runtime-v16';
 
 const CORE = [
   '.',
@@ -42,13 +42,9 @@ self.addEventListener('install', (e) => {
     // bundled speech clips (~5.6 MB) — the app speaks fully offline
     await Promise.allSettled(Object.values(AUDIO_MAP).map((p) =>
       cache.add(p).catch(() => null)));
-    // full-dex Pokémon audio: cries + name-voices + ambient chirps (all 1025)
-    await Promise.allSettled(Array.from({ length: 1025 }, (_, i) =>
-      cache.add(`cries/${i + 1}.mp3`).catch(() => null)));
-    await Promise.allSettled(Array.from({ length: 1025 }, (_, i) =>
-      cache.add(`voices/${i + 1}.m4a`).catch(() => null)));
-    await Promise.allSettled(Array.from({ length: 1025 }, (_, i) =>
-      cache.add(`chirps/${i + 1}.m4a`).catch(() => null)));
+    // Pokémon audio (37 MB / 3075 files) is NOT precached here — browsers
+    // time-limit the install phase. The page warms it into the version-stable
+    // 'baca-pokemon-audio' cache in the background (app.js warmPokemonAudio).
     self.skipWaiting();
   })());
 });
@@ -56,7 +52,8 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter((k) => k !== VERSION && k !== RUNTIME).map((k) => caches.delete(k)));
+    const KEEP = [VERSION, RUNTIME, 'baca-pokemon-audio'];   // pokemon audio survives updates
+    await Promise.all(keys.filter((k) => !KEEP.includes(k)).map((k) => caches.delete(k)));
     self.clients.claim();
   })());
 });

@@ -126,6 +126,32 @@ function ttsSpeak(text, lang) {
   });
 }
 
+/* =========================================================================
+   BACKGROUND WARM-UP of Pokémon audio (cries/voices/chirps, ~37 MB)
+   Runs after load, a few files at a time, resumable — skips what's cached.
+   Uses a version-stable cache so app updates never re-download it.
+   ========================================================================= */
+async function warmPokemonAudio() {
+  if (!('caches' in window) || !navigator.onLine) return;
+  let cache;
+  try { cache = await caches.open('baca-pokemon-audio'); } catch (e) { return; }
+  const urls = [];
+  for (let id = 1; id <= 1025; id++) urls.push(`cries/${id}.mp3`, `voices/${id}.m4a`, `chirps/${id}.m4a`);
+  let misses = 0;
+  for (let i = 0; i < urls.length; i += 6) {
+    if (!navigator.onLine) return;                        // resume next launch
+    const batch = urls.slice(i, i + 6);
+    const results = await Promise.allSettled(batch.map(async (u) => {
+      if (await cache.match(u)) return 'have';
+      await cache.add(u);
+      return 'added';
+    }));
+    if (results.every((r) => r.status === 'rejected') && ++misses > 5) return;  // network gone
+    await new Promise((r) => setTimeout(r, 60));          // stay polite to the main thread
+  }
+}
+window.addEventListener('load', () => setTimeout(warmPokemonAudio, 8000));
+
 /* returning from background can leave the synth permanently paused — reset it */
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && window.speechSynthesis) {
