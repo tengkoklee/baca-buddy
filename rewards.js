@@ -269,8 +269,7 @@ function renderPet() {
     </div>`;
   $('petImg').addEventListener('click', async () => {
     bouncePet();
-    await playCry(p.mon.id);
-    speak(`${p.mon.name}!`, 'en');
+    playVoice(p.mon.id);
   });
   area.querySelectorAll('.pet-item').forEach((b) => b.addEventListener('click', () => useItem(b.dataset.item)));
   $('petSwitch').addEventListener('click', renderPetChooser);
@@ -398,6 +397,21 @@ async function evolveCeremony(fromMon, toMon, p) {
 const cryEl = new Audio();
 cryEl.volume = 0.55;                       // cries are recorded hot — tame them
 
+function playVoice(id) {          // the pal "says its name" (generated, anime-style)
+  return new Promise((resolve) => {
+    if (!state.sound) { resolve(); return; }
+    let done = false;
+    const finish = () => { if (!done) { done = true; resolve(); } };
+    try {
+      cryEl.onended = finish; cryEl.onerror = finish;
+      cryEl.src = POKE_VOICE(id);
+      cryEl.volume = 0.95;
+      cryEl.play().then(null, finish);
+    } catch (e) { finish(); }
+    setTimeout(finish, 6000);
+  });
+}
+
 function playCry(id) {
   return new Promise((resolve) => {
     if (!state.sound) { resolve(); return; }
@@ -406,6 +420,7 @@ function playCry(id) {
     try {
       cryEl.onended = finish; cryEl.onerror = finish;
       cryEl.src = POKE_CRY(id);
+      cryEl.volume = 0.55;
       cryEl.play().then(null, finish);
     } catch (e) { finish(); }
     setTimeout(finish, 4000);
@@ -498,7 +513,7 @@ const COMPANION_LINES = [
 async function pokeCompanion() {
   const p = petInfo(rwState()); if (!p) return;
   hopCompanion();
-  await playCry(p.mon.id);                  // its REAL voice first!
+  await playVoice(p.mon.id);                // it says its own name!
   const line = pick(COMPANION_LINES);
   await speak(`${p.mon.name} says: ${line.en}`, 'en');
   speak(line.zh, 'zh');

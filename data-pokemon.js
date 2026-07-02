@@ -182,3 +182,6 @@ const POKE_ANI = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/mast
 
 /* bundled Pokémon cry (Gen-1, mp3 — iOS-safe) */
 const POKE_CRY = (id) => `cries/${id}.mp3`;
+
+/* generated name-saying voice ("Pika pika! Pikachu!") — cute anime-style */
+const POKE_VOICE = (id) => `voices/${id}.m4a`;
