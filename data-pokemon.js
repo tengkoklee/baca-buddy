@@ -179,3 +179,6 @@ const CARE_ITEMS = {
 
 /* animated pixel sprite (Gen-5 battle idle animation) — the wandering companion */
 const POKE_ANI = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`;
+
+/* bundled Pokémon cry (Gen-1, mp3 — iOS-safe) */
+const POKE_CRY = (id) => `cries/${id}.mp3`;

@@ -192,6 +192,7 @@ async function revealCatch() {
     <div class="catch-name">${legend ? '🌟 ' : ''}You caught <b>${mon.name}</b>!${legend ? ' 🌟' : ''}</div>`;
   $('catchClose').style.display = '';
   confetti();
+  await playCry(mon.id);
   await speak(`You caught ${mon.name}!`, 'en');
   speak(legend ? '哇！传说的宝可梦！' : '太棒了！', 'zh');
   renderRewards();
@@ -268,7 +269,8 @@ function renderPet() {
     </div>`;
   $('petImg').addEventListener('click', async () => {
     bouncePet();
-    await speak(`${p.mon.name}!`, 'en');
+    await playCry(p.mon.id);
+    speak(`${p.mon.name}!`, 'en');
   });
   area.querySelectorAll('.pet-item').forEach((b) => b.addEventListener('click', () => useItem(b.dataset.item)));
   $('petSwitch').addEventListener('click', renderPetChooser);
@@ -387,8 +389,27 @@ async function evolveCeremony(fromMon, toMon, p) {
   $('catchClose').style.display = '';
   confetti();
   renderPet(); renderRewards();                           // refresh UI before the speeches
+  await playCry(toMon.id);
   await speak(`Congratulations! ${fromMon.name} evolved into ${toMon.name}!`, 'en');
   speak('哇！进化了！太厉害了！', 'zh');
+}
+
+/* ---------- Pokémon cries (bundled mp3, offline-safe) ---------- */
+const cryEl = new Audio();
+cryEl.volume = 0.55;                       // cries are recorded hot — tame them
+
+function playCry(id) {
+  return new Promise((resolve) => {
+    if (!state.sound) { resolve(); return; }
+    let done = false;
+    const finish = () => { if (!done) { done = true; resolve(); } };
+    try {
+      cryEl.onended = finish; cryEl.onerror = finish;
+      cryEl.src = POKE_CRY(id);
+      cryEl.play().then(null, finish);
+    } catch (e) { finish(); }
+    setTimeout(finish, 4000);
+  });
 }
 
 /* =========================================================================
@@ -477,6 +498,7 @@ const COMPANION_LINES = [
 async function pokeCompanion() {
   const p = petInfo(rwState()); if (!p) return;
   hopCompanion();
+  await playCry(p.mon.id);                  // its REAL voice first!
   const line = pick(COMPANION_LINES);
   await speak(`${p.mon.name} says: ${line.en}`, 'en');
   speak(line.zh, 'zh');

@@ -3,8 +3,8 @@
    everything and old caches are dropped on activate. */
 importScripts('audio-manifest.js');   // AUDIO_MAP: bundled speech clips
 
-const VERSION = 'baca-v10';
-const RUNTIME = 'baca-runtime-v10';
+const VERSION = 'baca-v12';
+const RUNTIME = 'baca-runtime-v12';
 
 const CORE = [
   '.',
@@ -32,13 +32,18 @@ const HANZI = ['一','三','中','二','人','从','他','们','休','信','做'
 self.addEventListener('install', (e) => {
   e.waitUntil((async () => {
     const cache = await caches.open(VERSION);
-    await cache.addAll(CORE);
+    // cache:'reload' bypasses the HTTP cache — otherwise a stale copy of an
+    // app file can get baked into the new version's precache
+    await cache.addAll(CORE.map((u) => new Request(u, { cache: 'reload' })));
     // hanzi data: tolerate individual misses so one bad file can't block install
     await Promise.allSettled(HANZI.map((c) =>
       cache.add(`hanzi-data/${encodeURIComponent(c)}.json`).catch(() => null)));
     // bundled speech clips (~5.6 MB) — the app speaks fully offline
     await Promise.allSettled(Object.values(AUDIO_MAP).map((p) =>
       cache.add(p).catch(() => null)));
+    // Pokémon cries (Gen-1, ~1.2 MB)
+    await Promise.allSettled(Array.from({ length: 151 }, (_, i) =>
+      cache.add(`cries/${i + 1}.mp3`).catch(() => null)));
     self.skipWaiting();
   })());
 });
