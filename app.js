@@ -65,7 +65,41 @@ function pickVoice(lang) {
 
 let ttsAlive = false;   // flips true the first time ANY utterance genuinely starts
 
+/* =========================================================================
+   AUDIO-FIRST SPEECH
+   All learning content ships as pre-recorded clips (audio/*.m4a, generated
+   with the Mac's Samantha/Tingting/Amira voices) — plain audio playback,
+   immune to the Web-Speech engine's silent-lockup bugs. The live TTS engine
+   is only a fallback for dynamic lines (Pokémon names etc.).
+   ========================================================================= */
+const clipEl = new Audio();
+clipEl.preload = 'auto';
+const CLIP_RATE = { 0.55: 0.75, 0.75: 0.9, 0.95: 1.0 };   // recorded slightly slow already
+
 function speak(text, lang) {
+  const key = lang + '|' + String(text);
+  if (typeof AUDIO_MAP !== 'undefined' && AUDIO_MAP[key]) return playClip(AUDIO_MAP[key]);
+  return ttsSpeak(text, lang);
+}
+
+function playClip(src) {
+  return new Promise((resolve) => {
+    if (!state.sound) { resolve(); return; }
+    let done = false;
+    const finish = () => { if (!done) { done = true; resolve(); } };
+    try {
+      clipEl.onended = finish;
+      clipEl.onerror = finish;
+      clipEl.src = src;                       // setting src stops any previous clip
+      clipEl.playbackRate = CLIP_RATE[state.speed] || 1.0;
+      ttsAlive = true;                        // audio path is alive by construction
+      clipEl.play().then(null, finish);       // autoplay-blocked etc. → resolve quietly
+    } catch (e) { finish(); }
+    setTimeout(finish, 12000);                // safety net
+  });
+}
+
+function ttsSpeak(text, lang) {
   return new Promise((resolve) => {
     if (!state.sound || !window.speechSynthesis || !text) { resolve(); return; }
     try { speechSynthesis.cancel(); } catch (e) {}
@@ -109,7 +143,17 @@ function unlockAudio() {
   if (audioUnlocked || !window.speechSynthesis) return;
   audioUnlocked = true;
   try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {}
-  speakGreeting();                         // spoken hello rides on the first tap (inside the gesture — iOS needs this)
+  // prime the clip player inside the same gesture (iOS unlocks <audio> per element)
+  try {
+    if (typeof AUDIO_MAP !== 'undefined') {
+      const any = Object.values(AUDIO_MAP)[0];
+      clipEl.muted = true;
+      clipEl.src = any;
+      clipEl.play().then(() => { clipEl.pause(); clipEl.muted = false; },
+                         () => { clipEl.muted = false; });
+    }
+  } catch (e) {}
+  setTimeout(speakGreeting, 150);          // spoken hello rides on the first tap
 }
 document.addEventListener('pointerdown', unlockAudio, { once: true });
 
@@ -164,6 +208,7 @@ function wordHTML(word, lang) {
 function show(screenId) {
   document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('active', s.id === screenId));
   try { speechSynthesis.cancel(); } catch (e) {}
+  try { clipEl.pause(); } catch (e) {}     // stop any playing clip on navigation
 }
 
 /* =========================================================================
@@ -597,7 +642,7 @@ function init() {
 
   $('soundBtn').addEventListener('click', () => {
     state.sound = !state.sound; applySound(); saveState();
-    if (state.sound) speak('Sound on', 'en'); else { try { speechSynthesis.cancel(); } catch (e) {} }
+    if (state.sound) speak('Hello Jayden!', 'en'); else { try { speechSynthesis.cancel(); clipEl.pause(); } catch (e) {} }
   });
 
   // flashcard controls

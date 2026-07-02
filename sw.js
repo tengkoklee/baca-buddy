@@ -1,8 +1,10 @@
 /* Baca Buddy service worker — full offline support.
    Bump VERSION whenever any app file changes: the new SW re-precaches
    everything and old caches are dropped on activate. */
-const VERSION = 'baca-v9';
-const RUNTIME = 'baca-runtime-v9';
+importScripts('audio-manifest.js');   // AUDIO_MAP: bundled speech clips
+
+const VERSION = 'baca-v10';
+const RUNTIME = 'baca-runtime-v10';
 
 const CORE = [
   '.',
@@ -15,6 +17,7 @@ const CORE = [
   'games3.js',
   'data-pokemon.js',
   'rewards.js',
+  'audio-manifest.js',
   'manifest.json',
   'vendor/hanzi-writer.min.js',
   'icons/icon-180.png',
@@ -33,6 +36,9 @@ self.addEventListener('install', (e) => {
     // hanzi data: tolerate individual misses so one bad file can't block install
     await Promise.allSettled(HANZI.map((c) =>
       cache.add(`hanzi-data/${encodeURIComponent(c)}.json`).catch(() => null)));
+    // bundled speech clips (~5.6 MB) — the app speaks fully offline
+    await Promise.allSettled(Object.values(AUDIO_MAP).map((p) =>
+      cache.add(p).catch(() => null)));
     self.skipWaiting();
   })());
 });
