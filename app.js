@@ -19,20 +19,22 @@ const shuffle = (arr) => {
 const ALL_WORDS = THEMES.flatMap((t) => t.words.map((w) => ({ ...w, themeId: t.id })));
 
 /* ---------- persistent state ---------- */
-const DEFAULTS = { speed: 0.75, font: 'lexend', lang: 'en', sound: true, topic: 'all' };
+const DEFAULTS = { speed: 0.75, font: 'lexend', lang: 'en', sound: true, topics: ['all'] };
 let state = loadState();
 
 function loadState() {
   try {
-    const s = { ...DEFAULTS, ...JSON.parse(localStorage.getItem('bacaBuddy') || '{}') };
+    const raw = JSON.parse(localStorage.getItem('bacaBuddy') || '{}');
+    const s = { ...DEFAULTS, ...raw };
     if (!['en', 'zh', 'ms'].includes(s.lang)) s.lang = 'en';   // migrate away from old 'mix'
+    if (!Array.isArray(raw.topics) || !raw.topics.length) s.topics = raw.topic ? [raw.topic] : ['all'];  // migrate old single topic
     return s;
   }
   catch (e) { return { ...DEFAULTS }; }
 }
 function saveState() {
   try { localStorage.setItem('bacaBuddy', JSON.stringify({
-    speed: state.speed, font: state.font, lang: state.lang, sound: state.sound, topic: state.topic
+    speed: state.speed, font: state.font, lang: state.lang, sound: state.sound, topics: state.topics
   })); } catch (e) {}
 }
 
@@ -257,21 +259,48 @@ const MENU = [
   { mode: 'homo',    ico: '👯', t1: 'Same Sound 同音', t2: '同音字，选一选',      screen: 'homophone', langs: ['zh'], direct: true }
 ];
 
-/* the active word pool: one topic, or everything (bigger variety) */
+/* the active word pool: everything, or the union of the ticked topics */
+function topicsAll() { return !state.topics || !state.topics.length || state.topics.includes('all'); }
+
 function topicTheme() {
-  if (state.topic && state.topic !== 'all') {
-    const th = THEMES.find((x) => x.id === state.topic);
-    if (th) return th;
+  if (!topicsAll()) {
+    const sel = THEMES.filter((th) => state.topics.includes(th.id));
+    if (sel.length === 1) return sel[0];
+    if (sel.length > 1) {
+      return { id: 'sel:' + sel.map((x) => x.id).sort().join('+'), emoji: '📚',
+               name: { en: 'My topics', zh: '我的主题', ms: 'Topik saya' },
+               words: sel.flatMap((th) => th.words.map((w) => ({ ...w, themeId: th.id }))) };
+    }
   }
   return { id: 'all', emoji: '🌈', name: { en: 'All topics', zh: '全部主题', ms: 'Semua topik' }, words: ALL_WORDS };
 }
 
+/* tick-to-include topic picker: a summary button + a fold-out chip panel */
 function renderTopicSel() {
-  const el = $('topicSel'); if (!el) return;
-  el.innerHTML = `<option value="all">🌈 ${t('topic_all')}</option>` +
-    THEMES.map((th) => `<option value="${th.id}">${th.emoji} ${th.name[state.lang] || th.name.en}</option>`).join('');
-  el.value = (state.topic && (state.topic === 'all' || THEMES.some((x) => x.id === state.topic))) ? state.topic : 'all';
-  el.onchange = () => { state.topic = el.value; saveState(); };
+  const btn = $('topicBtn'), panel = $('topicPanel');
+  if (!btn || !panel) return;
+  const n = topicsAll() ? 0 : THEMES.filter((th) => state.topics.includes(th.id)).length;
+  btn.innerHTML = `📚 <b>${n === 0 ? '🌈 ' + t('topic_all') : t('topic_n', { n })}</b> <span class="caret">${panel.classList.contains('open') ? '▲' : '▼'}</span>`;
+  panel.innerHTML = `
+    <button class="topic-chip ${topicsAll() ? 'on' : ''}" data-id="all">🌈 ${t('topic_all')}</button>` +
+    THEMES.map((th) => `
+    <button class="topic-chip ${!topicsAll() && state.topics.includes(th.id) ? 'on' : ''}" data-id="${th.id}">
+      ${th.emoji} ${th.name[state.lang] || th.name.en} <span class="tick">✓</span>
+    </button>`).join('');
+  panel.querySelectorAll('.topic-chip').forEach((c) => c.addEventListener('click', () => {
+    const id = c.dataset.id;
+    if (id === 'all') {
+      state.topics = ['all'];
+    } else {
+      let sel = topicsAll() ? [] : state.topics.filter((x) => x !== 'all');
+      if (sel.includes(id)) sel = sel.filter((x) => x !== id);
+      else sel.push(id);
+      state.topics = sel.length ? sel : ['all'];        // nothing ticked = everything
+    }
+    saveState();
+    renderTopicSel();
+  }));
+  btn.onclick = () => { panel.classList.toggle('open'); renderTopicSel(); };
 }
 
 function renderLangTabs() {

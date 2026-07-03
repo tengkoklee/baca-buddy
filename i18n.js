@@ -69,6 +69,7 @@ const STR = {
   item_gift:  { en: 'gift',  zh: '礼物', ms: 'hadiah' },
 
   topic_all: { en: 'All topics', zh: '全部主题', ms: 'Semua topik' },
+  topic_n:   { en: '{n} topics ticked', zh: '已选 {n} 个主题', ms: '{n} topik dipilih' },
 
   /* test prep (Ejaan / Spelling / 听写) */
   menu_test:   { en: 'Spelling Test', zh: '听写', ms: 'Ejaan' },
