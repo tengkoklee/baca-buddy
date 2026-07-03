@@ -251,6 +251,7 @@ const MENU = [
   { mode: 'blend',   ico: '🧩', t1: 'Blend It',        t2: 'Suku kata',          screen: 'blend',  langs: ['en', 'ms'] },
   { mode: 'hunt',    ico: '🔍', t1: 'Sound Hunt',      t2: 'Cari bunyi',         screen: 'hunt',   langs: ['en', 'ms'] },
   { mode: 'fluent',  ico: '🏃', t1: 'Read Along',      t2: 'Baca lancar',        screen: 'fluent', langs: ['en', 'ms'], direct: true },
+  { mode: 'test',    ico: '📝', t1: 'Spelling Test',   t2: '听写 · Ejaan',        screen: 'test',   langs: 'all', direct: true },
   { mode: 'trace',   ico: '✍️', t1: 'Write 写字',      t2: '一笔一画描汉字',      screen: 'trace',    langs: ['zh'], direct: true },
   { mode: 'radical', ico: '🧱', t1: 'Build 拼字',      t2: '部件拼汉字',          screen: 'radical',  langs: ['zh'], direct: true },
   { mode: 'homo',    ico: '👯', t1: 'Same Sound 同音', t2: '同音字，选一选',      screen: 'homophone', langs: ['zh'], direct: true }
@@ -322,6 +323,7 @@ function startMode(mode, theme) {
   else if (mode === 'radical') { show('screen-radical'); nextRadical(); }
   else if (mode === 'homo') { show('screen-homophone'); nextHomo(); }
   else if (mode === 'fluent') { startFluent(); }
+  else if (mode === 'test') { openTestMode(); }
 }
 
 /* the practise language is now a single, explicit choice (home-screen tabs) */

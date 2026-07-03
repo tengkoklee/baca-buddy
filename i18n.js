@@ -68,6 +68,22 @@ const STR = {
   item_toy:   { en: 'toy',   zh: '玩具', ms: 'mainan' },
   item_gift:  { en: 'gift',  zh: '礼物', ms: 'hadiah' },
 
+  /* test prep (Ejaan / Spelling / 听写) */
+  menu_test:   { en: 'Spelling Test', zh: '听写', ms: 'Ejaan' },
+  tp_parent_hint: { en: 'For parents 👨‍👩‍👦: type the words from the teacher, one per line. Jayden will drill exactly these for the test.',
+                    zh: '给家长 👨‍👩‍👦：输入老师给的听写词语，一行一个。孩子会专门练习这些词。',
+                    ms: 'Untuk ibu bapa 👨‍👩‍👦: taip perkataan daripada cikgu, satu setiap baris. Jayden akan berlatih perkataan ini sahaja.' },
+  tp_save:     { en: 'Save list',  zh: '保存',     ms: 'Simpan' },
+  tp_back:     { en: 'Back',       zh: '返回',     ms: 'Kembali' },
+  tp_edit:     { en: 'Edit words', zh: '改词语',   ms: 'Ubah senarai' },
+  tp_kid_hint: { en: '{n} words for the test — let\u2019s practise!', zh: '这次听写有 {n} 个词 — 一起练习吧！', ms: '{n} patah perkataan untuk ujian — jom berlatih!' },
+  tp_word_n:   { en: 'Word {i} of {n}', zh: '第 {i} 个，共 {n} 个', ms: 'Perkataan {i} / {n}' },
+  tp_hint:     { en: 'Hint',       zh: '提示',     ms: 'Bantuan' },
+  tp_perfect:  { en: '💯 All correct! Ready for the test!', zh: '💯 全对！听写没问题了！', ms: '💯 Semua betul! Sedia untuk ujian!' },
+  tp_score:    { en: '{r} / {n} correct — practise these again:', zh: '对了 {r} / {n} — 再练这些：', ms: '{r} / {n} betul — ulang yang ini:' },
+  tp_again:    { en: 'Practise missed', zh: '再练错的', ms: 'Ulang yang salah' },
+  tp_done:     { en: 'Done',       zh: '完成',     ms: 'Selesai' },
+
   /* practice tracker */
   days:      { en: '🔥 {n} day streak', zh: '🔥 连续 {n} 天', ms: '🔥 {n} hari berturut' },
   min_today: { en: '{m}/10 min today',  zh: '今天 {m}/10 分钟', ms: '{m}/10 min hari ini' },
@@ -102,6 +118,7 @@ function applyStaticI18n() {
   set('#screen-fluent .screen-title > span:nth-child(2)', t('menu_fluent'));
   set('#screen-tracepick .screen-title span:last-child', t('title_tracepick'));
   set('#screen-pet .screen-title span:last-child', t('title_pet'));
+  set('#testTitle', t('menu_test'));
   // prompts
   set('#listenQ', t('listen_q'));
   set('#screen-match .q', t('match_q'));

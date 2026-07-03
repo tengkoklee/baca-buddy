@@ -68,13 +68,14 @@ function renderTrace() {
 
 function startTraceQuiz() {
   if (!traceWriter) return;
-  traceWriter.quiz({
-    onComplete: async (summary) => {
-      recordAnswer('trace', 'zh', TRACE_CHARS[traceIdx].ch, (summary && summary.totalMistakes || 0) <= 3);
-      await celebrate();
-      $('traceStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5));
-    }
-  });
+  traceWriter.quiz({ onComplete: traceQuizDone });
+}
+
+async function traceQuizDone(summary) {
+  recordAnswer('trace', 'zh', TRACE_CHARS[traceIdx].ch, (summary && summary.totalMistakes || 0) <= 3);
+  await celebrate();
+  $('traceStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5));
+  traceStep(1);                              // auto-flip to the next character
 }
 
 async function traceWatch() {
