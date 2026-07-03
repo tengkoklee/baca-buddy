@@ -21,13 +21,22 @@ function tpWords(lang) { return (tpLoad()[lang] || {}).words || []; }
 function tpStage(lang) { return (tpLoad()[lang] || {}).stage || 1; }   // 1 Copy · 2 Peek · 3 Test
 function tpSetStage(lang, st) { const d = tpLoad(); d[lang] = d[lang] || {}; d[lang].stage = st; tpSave(d); }
 
+/* the drill words: the parent's saved list if any, else fall back to the
+   ticked-topic vocabulary so the kid can ALWAYS practise (no setup needed). */
+function tpEffectiveWords(lang) {
+  const custom = tpWords(lang);
+  if (custom.length) return { words: custom, source: 'custom' };
+  const pool = (typeof topicTheme === 'function') ? topicTheme().words : [];
+  const words = shuffle(pool.map((w) => lang === 'zh' ? w.zh.w : (lang === 'ms' ? w.ms.w : w.en.w)))
+    .filter(Boolean).slice(0, 15);
+  return { words, source: 'topic' };
+}
+
 /* ---------- session state ---------- */
 let tp = null;   // { lang, queue, idx, missed:Set, total, round, word, slots, tray, chars, charIdx, writer, hinted }
 
 function openTestMode() {
-  const lang = state.lang;
-  if (tpWords(lang).length) renderTestHome(lang);
-  else renderTestEditor(lang);
+  renderTestHome(state.lang);   // always land on the drill home (kid-first)
   show('screen-test');
 }
 
@@ -41,37 +50,36 @@ function renderTestEditor(lang) {
         placeholder="${lang === 'zh' ? '苹果\n学校\n朋友' : (lang === 'ms' ? 'sekolah\nkawan\nmakanan' : 'school\nfriend\nbecause')}">${existing}</textarea>
       <div class="flu-row">
         <button class="iconbtn flu-go" id="tpSaveBtn">💾<span class="lbl">${t('tp_save')}</span></button>
-        ${existing ? `<button class="iconbtn" id="tpCancelBtn">↩️<span class="lbl">${t('tp_back')}</span></button>` : ''}
+        <button class="iconbtn" id="tpCancelBtn">↩️<span class="lbl">${t('tp_back')}</span></button>
       </div>
     </div>`;
   $('tpSaveBtn').addEventListener('click', () => {
     const words = $('tpWordsInput').value.split('\n').map((w) => w.trim()).filter(Boolean).slice(0, 40);
     const d = tpLoad();
-    d[lang] = { words, updated: Date.now() };
+    d[lang] = { ...(d[lang] || {}), words, updated: Date.now() };
     tpSave(d);
-    if (words.length) renderTestHome(lang); else renderTestEditor(lang);
+    renderTestHome(lang);   // topic-word fallback means home is always usable
   });
   const c = $('tpCancelBtn');
   if (c) c.addEventListener('click', () => renderTestHome(lang));
 }
 
-/* ---------- list home ---------- */
+/* ---------- list home (kid-first) ---------- */
 function renderTestHome(lang) {
-  const words = tpWords(lang);
+  const eff = tpEffectiveWords(lang);
   const st = tpStage(lang);
   $('testArea').innerHTML = `
     <div class="pet-card test-card">
-      <div class="tp-list">${words.map((w) => `<span class="flu-chip">${w}</span>`).join('')}</div>
+      <div class="tp-src">${eff.source === 'custom' ? t('tp_src_teacher', { n: eff.words.length }) : t('tp_src_topic')}</div>
+      <div class="tp-list">${eff.words.slice(0, 20).map((w) => `<span class="flu-chip">${w}</span>`).join('')}</div>
       <div class="tp-stages">
         <button class="tp-stage-btn ${st === 1 ? 'on' : ''}" data-st="1">${t('tp_stage_copy')}</button>
         <button class="tp-stage-btn ${st === 2 ? 'on' : ''}" data-st="2">${t('tp_stage_peek')}</button>
         <button class="tp-stage-btn ${st === 3 ? 'on' : ''}" data-st="3">${t('tp_stage_test')}</button>
       </div>
-      <div class="flu-row">
-        <button class="iconbtn flu-go" id="tpStartBtn">▶️<span class="lbl">${t('start')}</span></button>
-        <button class="iconbtn small" id="tpEditBtn">✏️<span class="lbl">${t('tp_edit')}</span></button>
-      </div>
+      <button class="tp-bigstart" id="tpStartBtn">▶️ ${t('tp_start_drill')}</button>
       <p class="hint-line">${t('tp_stage_hint')}</p>
+      <button class="iconbtn small tp-setwords" id="tpEditBtn">✏️<span class="lbl">${t('tp_set_words')}</span></button>
     </div>`;
   $('testArea').querySelectorAll('.tp-stage-btn').forEach((b) => b.addEventListener('click', () => {
     tpSetStage(lang, +b.dataset.st);
@@ -83,8 +91,9 @@ function renderTestHome(lang) {
 
 /* ---------- test run ---------- */
 function startTestRun(lang) {
-  tp = { lang, queue: shuffle(tpWords(lang)), idx: 0, missed: new Set(),
-         total: tpWords(lang).length, round: 1, stage: tpStage(lang) };
+  const eff = tpEffectiveWords(lang);
+  tp = { lang, queue: shuffle(eff.words), idx: 0, missed: new Set(),
+         total: eff.words.length, round: 1, stage: tpStage(lang) };
   nextTestWord();
 }
 
