@@ -338,22 +338,7 @@ function goHome() { show('screen-home'); }
 /* =========================================================================
    THEME PICKER
    ========================================================================= */
-function openThemePicker(mode) {
-  ctx.mode = mode;
-  const m = MENU.find((x) => x.mode === mode);
-  $('themeModeIcon').textContent = m.ico;
-  $('themeModeTitle').textContent = t('menu_' + m.mode) + ' — ' + t('pick_topic');
-  $('themeGrid').innerHTML = THEMES.map((t) => `
-    <div class="theme-card" data-id="${t.id}">
-      <div class="ico">${t.emoji}</div>
-      <div class="t1">${t.name.en}</div>
-      <div class="t2">${t.name.zh} · ${t.name.ms}</div>
-    </div>`).join('');
-  $('themeGrid').querySelectorAll('.theme-card').forEach((el) => {
-    el.addEventListener('click', () => startMode(mode, THEMES.find((t) => t.id === el.dataset.id)));
-  });
-  show('screen-themes');
-}
+
 
 function startMode(mode, theme) {
   ctx.theme = theme;
