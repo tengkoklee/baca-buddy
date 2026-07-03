@@ -68,6 +68,8 @@ const STR = {
   item_toy:   { en: 'toy',   zh: '玩具', ms: 'mainan' },
   item_gift:  { en: 'gift',  zh: '礼物', ms: 'hadiah' },
 
+  topic_all: { en: 'All topics', zh: '全部主题', ms: 'Semua topik' },
+
   /* test prep (Ejaan / Spelling / 听写) */
   menu_test:   { en: 'Spelling Test', zh: '听写', ms: 'Ejaan' },
   tp_parent_hint: { en: 'For parents 👨‍👩‍👦: type the words from the teacher, one per line. Jayden will drill exactly these for the test.',
@@ -83,6 +85,11 @@ const STR = {
   tp_score:    { en: '{r} / {n} correct — practise these again:', zh: '对了 {r} / {n} — 再练这些：', ms: '{r} / {n} betul — ulang yang ini:' },
   tp_again:    { en: 'Practise missed', zh: '再练错的', ms: 'Ulang yang salah' },
   tp_done:     { en: 'Done',       zh: '完成',     ms: 'Selesai' },
+  tp_stage_copy: { en: '1️⃣ Copy',  zh: '1️⃣ 抄写',  ms: '1️⃣ Salin' },
+  tp_stage_peek: { en: '2️⃣ Peek',  zh: '2️⃣ 看了写', ms: '2️⃣ Intai' },
+  tp_stage_test: { en: '3️⃣ Test',  zh: '3️⃣ 听写',  ms: '3️⃣ Ujian' },
+  tp_stage_hint: { en: 'Start with Copy, move up when ready!', zh: '先从抄写开始，准备好了再升级！', ms: 'Mula dengan Salin, naik tahap bila sedia!' },
+  catch_throw:   { en: 'Flick the ball at the Pokémon!', zh: '把精灵球扔向宝可梦！', ms: 'Baling Pokéball ke arah Pokémon!' },
 
   /* practice tracker */
   days:      { en: '🔥 {n} day streak', zh: '🔥 连续 {n} 天', ms: '🔥 {n} hari berturut' },

@@ -100,10 +100,10 @@ function pickCatch() {
   return pick(POKEMON);                                               // dex complete — free rethrows
 }
 
-function doCatch() {
+function doCatch(chosen) {
   const d = rwState();
   if (d.balls <= 0) return null;
-  const mon = pickCatch();
+  const mon = chosen || pickCatch();
   d.balls--;
   if (mon.tier === 'legendary' && d.legendaryPending > 0) d.legendaryPending--;
   if (!d.caught.includes(mon.id)) d.caught.push(mon.id);
@@ -158,6 +158,8 @@ function renderRewards() {
 /* ---------- catch ceremony ---------- */
 let catchMon = null;
 
+let wild = null;   // { mon, misses, wanderTimer, throwing, done }
+
 function openCatch() {
   const d = rwState();
   if (d.balls <= 0) {
@@ -165,21 +167,97 @@ function openCatch() {
     return;
   }
   catchMon = null;
+  wild = { mon: pickCatch(), misses: 0, throwing: false, done: false };
   $('catchStage').innerHTML = `
-    <div class="pokeball big tap-hint" id="catchBall"></div>
-    <div class="catch-caption">${t('tap_ball')}</div>`;
+    <div class="wild-arena" id="wildArena">
+      <img class="wild-sprite" id="wildSprite" alt="wild pokemon"
+           src="${POKE_ANI(wild.mon.id)}"
+           onerror="this.onerror=null; this.src='${POKE_ART(wild.mon.id)}'; this.style.height='110px';" />
+      <div class="throw-ball" id="throwBall"><span class="pokeball"></span></div>
+    </div>
+    <div class="catch-caption">${t('catch_throw')}</div>`;
   $('catchClose').style.display = 'none';
   $('catchBack').classList.add('open');
-  $('catchBall').addEventListener('click', throwBall, { once: true });
+  playCry(wild.mon.id);
+  wildWander();
+  wild.wanderTimer = setInterval(wildWander, 2600);
+  armThrowBall();
 }
 
-function throwBall() {
-  catchMon = doCatch();
+function wildWander() {
+  const s = $('wildSprite');
+  if (!s || wild.done) return;
+  s.style.left = (18 + Math.random() * 64) + '%';
+}
+
+/* pointer-flick throwing. A gentle game: generous hitbox, a straight tap
+   auto-aims, and after 2 misses every throw homes in — never frustrating. */
+function armThrowBall() {
+  const ball = $('throwBall'), arena = $('wildArena');
+  let drag = null;
+  ball.addEventListener('pointerdown', (e) => {
+    if (wild.throwing || wild.done) return;
+    drag = { x0: e.clientX, y0: e.clientY, t0: Date.now(), moved: false };
+    ball.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  ball.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+    if (Math.abs(dx) + Math.abs(dy) > 8) drag.moved = true;
+    ball.style.transform = `translate(${dx}px, ${Math.min(0, dy)}px)`;
+  });
+  ball.addEventListener('pointerup', (e) => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+    const flungUp = drag.moved && dy < -30;
+    const autoAim = !drag.moved || wild.misses >= 2;      // tap = auto-aim; 2 misses = mercy
+    drag = null;
+    if (flungUp || autoAim) resolveThrow(dx, autoAim);
+    else ball.style.transform = '';                        // tiny wiggle, not a throw
+  });
+}
+
+function resolveThrow(dx, autoAim) {
+  if (wild.throwing || wild.done) return;
+  wild.throwing = true;
+  const ball = $('throwBall'), sprite = $('wildSprite'), arena = $('wildArena');
+  const a = arena.getBoundingClientRect(), s = spriteCenter();
+  // where the throw lands horizontally (arena-relative)
+  const startX = a.width / 2;
+  const landX = autoAim ? s.x : Math.max(30, Math.min(a.width - 30, startX + dx * 2.2));
+  const hit = Math.abs(landX - s.x) < 80;                  // generous hitbox
+  ball.classList.add('flying');
+  ball.style.transform = `translate(${landX - startX}px, ${-(a.height - 130)}px) scale(.72) rotate(360deg)`;
+  setTimeout(() => hit ? wildHit(ball, sprite) : wildMiss(ball, sprite), 580);
+}
+
+function spriteCenter() {
+  const arena = $('wildArena').getBoundingClientRect();
+  const r = $('wildSprite').getBoundingClientRect();
+  return { x: r.left - arena.left + r.width / 2, y: r.top - arena.top + r.height / 2 };
+}
+
+async function wildHit(ball, sprite) {
+  wild.done = true;
+  clearInterval(wild.wanderTimer);
+  sprite.style.display = 'none';                           // zapped into the ball!
+  ball.classList.remove('flying');
+  ball.querySelector('.pokeball').classList.add('wobbling');
+  catchMon = doCatch(wild.mon);                            // commit the catch
   if (!catchMon) { closeCatch(); return; }
-  const ball = $('catchBall');
-  ball.classList.remove('tap-hint');
-  ball.classList.add('wobbling');
   setTimeout(() => revealCatch(), 1600);
+}
+
+function wildMiss(ball, sprite) {
+  wild.misses++;
+  sprite.classList.remove('dodge'); void sprite.offsetWidth;
+  sprite.classList.add('dodge');
+  wildWander();
+  ball.classList.remove('flying');
+  ball.classList.add('dropping');
+  ball.style.transform = 'translate(0, 0)';
+  setTimeout(() => { ball.classList.remove('dropping'); wild.throwing = false; }, 480);
 }
 
 async function revealCatch() {
@@ -199,6 +277,7 @@ async function revealCatch() {
 }
 
 function closeCatch() {
+  if (wild && wild.wanderTimer) clearInterval(wild.wanderTimer);
   $('catchBack').classList.remove('open');
   renderRewards();
   // more balls waiting? gentle hint

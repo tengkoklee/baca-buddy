@@ -19,7 +19,7 @@ const shuffle = (arr) => {
 const ALL_WORDS = THEMES.flatMap((t) => t.words.map((w) => ({ ...w, themeId: t.id })));
 
 /* ---------- persistent state ---------- */
-const DEFAULTS = { speed: 0.75, font: 'lexend', lang: 'en', sound: true };
+const DEFAULTS = { speed: 0.75, font: 'lexend', lang: 'en', sound: true, topic: 'all' };
 let state = loadState();
 
 function loadState() {
@@ -32,7 +32,7 @@ function loadState() {
 }
 function saveState() {
   try { localStorage.setItem('bacaBuddy', JSON.stringify({
-    speed: state.speed, font: state.font, lang: state.lang, sound: state.sound
+    speed: state.speed, font: state.font, lang: state.lang, sound: state.sound, topic: state.topic
   })); } catch (e) {}
 }
 
@@ -257,6 +257,23 @@ const MENU = [
   { mode: 'homo',    ico: '👯', t1: 'Same Sound 同音', t2: '同音字，选一选',      screen: 'homophone', langs: ['zh'], direct: true }
 ];
 
+/* the active word pool: one topic, or everything (bigger variety) */
+function topicTheme() {
+  if (state.topic && state.topic !== 'all') {
+    const th = THEMES.find((x) => x.id === state.topic);
+    if (th) return th;
+  }
+  return { id: 'all', emoji: '🌈', name: { en: 'All topics', zh: '全部主题', ms: 'Semua topik' }, words: ALL_WORDS };
+}
+
+function renderTopicSel() {
+  const el = $('topicSel'); if (!el) return;
+  el.innerHTML = `<option value="all">🌈 ${t('topic_all')}</option>` +
+    THEMES.map((th) => `<option value="${th.id}">${th.emoji} ${th.name[state.lang] || th.name.en}</option>`).join('');
+  el.value = (state.topic && (state.topic === 'all' || THEMES.some((x) => x.id === state.topic))) ? state.topic : 'all';
+  el.onchange = () => { state.topic = el.value; saveState(); };
+}
+
 function renderLangTabs() {
   const el = $('langTabs'); if (!el) return;
   el.innerHTML = ['en', 'zh', 'ms'].map((l) => `
@@ -266,7 +283,7 @@ function renderLangTabs() {
     </button>`).join('');
   el.querySelectorAll('.lang-tab').forEach((b) => b.addEventListener('click', () => {
     state.lang = b.dataset.lang; saveState();
-    renderLangTabs(); buildHome(); applyStaticI18n();
+    renderLangTabs(); buildHome(); renderTopicSel(); applyStaticI18n();
     speak(b.dataset.lang === 'en' ? 'English!' : (b.dataset.lang === 'zh' ? '中文！' : 'Bahasa Melayu!'), b.dataset.lang);
   }));
 }
@@ -282,8 +299,7 @@ function buildHome() {
   $('menuGrid').querySelectorAll('.menu-card').forEach((el) => {
     el.addEventListener('click', () => {
       const m = MENU.find((x) => x.mode === el.dataset.mode);
-      if (m.direct) startMode(m.mode, ctx.theme);   // hanzi games need no topic picker
-      else openThemePicker(m.mode);
+      startMode(m.mode, topicTheme());              // pool follows the topic dropdown
     });
   });
 }
@@ -668,6 +684,7 @@ function init() {
   renderGreeting();
   renderLangTabs();
   buildHome();
+  renderTopicSel();
   applyStaticI18n();
 
   $('homeBtn').addEventListener('click', goHome);

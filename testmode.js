@@ -18,6 +18,8 @@ function tpLoad() {
 }
 function tpSave(d) { try { localStorage.setItem('bacaTests', JSON.stringify(d)); } catch (e) {} }
 function tpWords(lang) { return (tpLoad()[lang] || {}).words || []; }
+function tpStage(lang) { return (tpLoad()[lang] || {}).stage || 1; }   // 1 Copy · 2 Peek · 3 Test
+function tpSetStage(lang, st) { const d = tpLoad(); d[lang] = d[lang] || {}; d[lang].stage = st; tpSave(d); }
 
 /* ---------- session state ---------- */
 let tp = null;   // { lang, queue, idx, missed:Set, total, round, word, slots, tray, chars, charIdx, writer, hinted }
@@ -56,15 +58,25 @@ function renderTestEditor(lang) {
 /* ---------- list home ---------- */
 function renderTestHome(lang) {
   const words = tpWords(lang);
+  const st = tpStage(lang);
   $('testArea').innerHTML = `
     <div class="pet-card test-card">
       <div class="tp-list">${words.map((w) => `<span class="flu-chip">${w}</span>`).join('')}</div>
+      <div class="tp-stages">
+        <button class="tp-stage-btn ${st === 1 ? 'on' : ''}" data-st="1">${t('tp_stage_copy')}</button>
+        <button class="tp-stage-btn ${st === 2 ? 'on' : ''}" data-st="2">${t('tp_stage_peek')}</button>
+        <button class="tp-stage-btn ${st === 3 ? 'on' : ''}" data-st="3">${t('tp_stage_test')}</button>
+      </div>
       <div class="flu-row">
         <button class="iconbtn flu-go" id="tpStartBtn">▶️<span class="lbl">${t('start')}</span></button>
         <button class="iconbtn small" id="tpEditBtn">✏️<span class="lbl">${t('tp_edit')}</span></button>
       </div>
-      <p class="hint-line">${t('tp_kid_hint', { n: words.length })}</p>
+      <p class="hint-line">${t('tp_stage_hint')}</p>
     </div>`;
+  $('testArea').querySelectorAll('.tp-stage-btn').forEach((b) => b.addEventListener('click', () => {
+    tpSetStage(lang, +b.dataset.st);
+    renderTestHome(lang);
+  }));
   $('tpStartBtn').addEventListener('click', () => startTestRun(lang));
   $('tpEditBtn').addEventListener('click', () => renderTestEditor(lang));
 }
@@ -72,7 +84,7 @@ function renderTestHome(lang) {
 /* ---------- test run ---------- */
 function startTestRun(lang) {
   tp = { lang, queue: shuffle(tpWords(lang)), idx: 0, missed: new Set(),
-         total: tpWords(lang).length, round: 1 };
+         total: tpWords(lang).length, round: 1, stage: tpStage(lang) };
   nextTestWord();
 }
 
@@ -108,9 +120,12 @@ function renderEjaan() {
   tp.slots = new Array(letters.length).fill(null);
   tp.letters = letters;
   tp.tray = shuffle([...letters, ...distract]);
+  const showWord = tp.stage === 1 ? `<div class="tp-showword">${tp.word}</div>`
+    : (tp.stage === 2 ? `<div class="tp-showword fading">${tp.word}</div>` : '');
   $('testArea').innerHTML = `
     <div class="pet-card test-card">
       ${tpProgressHTML()}
+      ${showWord}
       <button class="iconbtn" id="tpHear">🔊<span class="lbl">${t('hear_it')}</span></button>
       <div class="build-slots" id="tpSlots"></div>
       <div class="tile-tray" id="tpTiles"></div>
@@ -167,9 +182,12 @@ function renderTingxie() {
   if (!tp.chars.length) { tp.idx++; nextTestWord(); return; }   // skip non-hanzi lines
   tp.charIdx = 0;
   tp.hinted = false;
+  const showWord = tp.stage === 1 ? `<div class="tp-showword zh">${tp.word}</div>`
+    : (tp.stage === 2 ? `<div class="tp-showword zh fading">${tp.word}</div>` : '');
   $('testArea').innerHTML = `
     <div class="pet-card test-card">
       ${tpProgressHTML()}
+      ${showWord}
       <div class="flu-row">
         <button class="iconbtn" id="tpHear">🔊<span class="lbl">${t('hear_it')}</span></button>
         <button class="iconbtn" id="tpHint">💡<span class="lbl">${t('tp_hint')}</span></button>
@@ -194,7 +212,8 @@ function renderTingxieChar() {
     try {
       tp.writer = HanziWriter.create('tpTraceBox', ch, {
         width: 280, height: 280, padding: 12,
-        showCharacter: false, showOutline: false,          // from MEMORY — true 听写
+        showCharacter: false,
+        showOutline: tp.stage === 1,                       // Copy stage traces over the outline
         strokeColor: '#3A352C', drawingColor: '#1F6F8B', drawingWidth: 24,
         highlightOnComplete: true, highlightColor: '#2E8B57',
         charDataLoader: (char) =>
