@@ -779,3 +779,5 @@ body.dys {
   .topbar, #reportPrint, .companion { display: none !important; }
   .screen { position: static !important; }
 }
+
+.seg-wrap { flex-wrap: wrap; }

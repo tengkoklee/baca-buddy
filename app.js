@@ -19,7 +19,7 @@ const shuffle = (arr) => {
 const ALL_WORDS = THEMES.flatMap((t) => t.words.map((w) => ({ ...w, themeId: t.id })));
 
 /* ---------- persistent state ---------- */
-const DEFAULTS = { speed: 0.75, font: 'lexend', lang: 'en', sound: true, topics: ['all'], age: 10 };
+const DEFAULTS = { speed: 0.75, font: 'lexend', lang: 'en', sound: true, topics: ['all'], age: 'auto' };
 let state = loadState();
 
 function loadState() {
@@ -28,17 +28,18 @@ function loadState() {
     const s = { ...DEFAULTS, ...raw };
     if (!['en', 'zh', 'ms'].includes(s.lang)) s.lang = 'en';   // migrate away from old 'mix'
     if (!Array.isArray(raw.topics) || !raw.topics.length) s.topics = raw.topic ? [raw.topic] : ['all'];  // migrate old single topic
-    if (![9, 10, 11, 12].includes(raw.age)) {   // migrate old Easy/Med/Hard/Auto → nearest age
-      const map = { 1: 9, 2: 10, 3: 11, auto: 10 };
-      s.age = map[raw.difficulty] || 10;
-    }
+    // age: 'auto' (progress-driven) unless the parent explicitly picked one
+    const validAge = raw.age === 'auto' || [9, 10, 11, 12, 13, 14, 15].includes(raw.age);
+    if (!validAge || !raw.ageUser) s.age = 'auto';
+    s.ageUser = !!raw.ageUser;
     return s;
   }
   catch (e) { return { ...DEFAULTS }; }
 }
 function saveState() {
   try { localStorage.setItem('bacaBuddy', JSON.stringify({
-    speed: state.speed, font: state.font, lang: state.lang, sound: state.sound, topics: state.topics, age: state.age
+    speed: state.speed, font: state.font, lang: state.lang, sound: state.sound, topics: state.topics,
+    age: state.age, ageUser: state.ageUser
   })); } catch (e) {}
 }
 
@@ -522,7 +523,8 @@ function nextBuild() {
   const lv = gameLevel('build', lang);
   const wlen = (w) => (lang === 'ms' ? w.ms.w : w.en.w).replace(/\s+/g, '').length;
   const pool = levelFilter(ctx.theme.words, (w) =>
-    lv === 1 ? wlen(w) <= 4 : (lv === 2 ? wlen(w) >= 4 && wlen(w) <= 7 : wlen(w) >= 6));
+    lv === 1 ? wlen(w) <= 4 : (lv === 2 ? wlen(w) >= 4 && wlen(w) <= 7 :
+    (lv <= 4 ? wlen(w) >= 6 : wlen(w) >= 8)));
   const word = adaptivePick('build', lang, pool, (w) => w.emoji);
   ctx.answer = word;
   const target = (lang === 'ms' ? word.ms.w : word.en.w).toLowerCase().replace(/\s+/g, '');
@@ -654,7 +656,11 @@ function applySound() {
 
 function applyDifficultyUI() {
   const seg = $('segDiff'); if (!seg) return;
-  seg.querySelectorAll('button').forEach((b) => b.classList.toggle('on', +b.dataset.age === state.age));
+  seg.querySelectorAll('button').forEach((b) => {
+    const v = b.dataset.age === 'auto' ? 'auto' : +b.dataset.age;
+    b.classList.toggle('on', state.age === v);
+    if (v === 'auto') b.textContent = `✨ Auto (${displayAge()})`;
+  });
 }
 
 function refreshSettingsUI() {
@@ -703,7 +709,7 @@ function openReport() {
     const review = r.toReview.map((id) => `<span class="flu-chip">${wordText(lc, id)}</span>`).join('');
     return `
       <div class="rep-lang">
-        <h3>${label} <span class="rep-lv">Lv ${r.level} · ${t('rep_age', { n: state.age })}</span></h3>
+        <h3>${label} <span class="rep-lv">Lv ${r.level} · ${t('rep_age', { n: displayAge() })}${state.age === 'auto' ? ' ✨' : ''}</span></h3>
         <div class="rep-bars">
           ${repBar(t('rep_mastered'), r.mastered, r.seen, '#2E8B57')}
           ${repBar(t('rep_strong'), r.strong, r.seen, '#6FBF73')}
@@ -806,7 +812,9 @@ function init() {
     state.font = b.dataset.font; applyFont(); saveState(); refreshSettingsUI();
   }));
   $('segDiff').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
-    state.age = +b.dataset.age; saveState(); applyDifficultyUI();
+    state.age = b.dataset.age === 'auto' ? 'auto' : +b.dataset.age;
+    state.ageUser = true;                 // explicit parent choice — survives updates
+    saveState(); applyDifficultyUI();
   }));
   $('reportBtn').addEventListener('click', () => { closeSheet(); openReport(); });
 

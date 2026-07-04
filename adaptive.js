@@ -14,7 +14,8 @@ const BOX_WEIGHT = [8, 5, 3, 2, 1, 0.5];   // box 0 (weak) … box 5 (mastered)
 const LEVEL_MIN_ANSWERS = 8;               // answers before the progress nudge can move
 const LEVEL_UP_EMA = 0.85;
 const LEVEL_DOWN_EMA = 0.5;
-const AGE_BASE = { 9: 1, 10: 2, 11: 3, 12: 4 };   // age → base difficulty level
+const AGE_BASE = { 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 6, 15: 7 };   // age → base difficulty level
+const AUTO_MIN_ANSWERS = 30;               // answers between auto age-promotions
 
 function adLoad() {
   try { return JSON.parse(localStorage.getItem('bacaMastery') || '{}'); }
@@ -23,7 +24,8 @@ function adLoad() {
 function adSave(d) { try { localStorage.setItem('bacaMastery', JSON.stringify(d)); } catch (e) {} }
 function adState() {
   const d = adLoad();
-  return { items: d.items || {}, levels: d.levels || {}, last: d.last || {} };
+  return { items: d.items || {}, levels: d.levels || {}, last: d.last || {},
+           meta: d.meta || { autoBase: 2, ema: 0.7, n: 0, lastMove: 0 } };   // autoBase 2 = age-10 start
 }
 
 /* next local midnight — a clean word hides until then */
@@ -63,16 +65,35 @@ function recordAnswer(mode, lang, id, ok) {
     lv.level--; lv.ema = 0.6; lv.lastMove = lv.n;           // a failure eases difficulty at once
   }
   d.levels[lk] = lv;
+
+  // ✨ Auto age: global performance slowly promotes (or eases) the base level
+  const m = d.meta;
+  m.ema = m.ema * 0.92 + (ok ? 1 : 0) * 0.08;
+  m.n++;
+  const mSettled = m.n - m.lastMove >= AUTO_MIN_ANSWERS;
+  if (mSettled && m.ema > 0.85 && m.autoBase < 7) {
+    m.autoBase++; m.ema = 0.7; m.lastMove = m.n;          // he has outgrown this level
+  } else if (mSettled && m.ema < 0.5 && m.autoBase > 1) {
+    m.autoBase--; m.ema = 0.7; m.lastMove = m.n;          // ease the base down gently
+  }
+  d.meta = m;
   adSave(d);
 }
 
-/* Effective level = age base + a small progress nudge (-1..+1), clamped 1-4. */
+/* Effective level = age base (or the auto base from progress) + nudge, clamped 1-7. */
 function gameLevel(mode, lang) {
-  const age = (typeof state !== 'undefined' && state && state.age) || 10;
-  const base = AGE_BASE[age] || 2;
-  const lv = adState().levels[`${mode}|${lang}`];
-  const nudge = lv ? (lv.level - 2) : 0;                    // adaptive centred at 2 → -1..+1
-  return Math.max(1, Math.min(4, base + nudge));
+  const st = adState();
+  const age = (typeof state !== 'undefined' && state && state.age) || 'auto';
+  const base = age === 'auto' ? st.meta.autoBase : (AGE_BASE[age] || 2);
+  const lv = st.levels[`${mode}|${lang}`];
+  const nudge = lv ? (lv.level - 2) : 0;                    // per-game nudge -1..+1
+  return Math.max(1, Math.min(7, base + nudge));
+}
+
+/* the age the app currently treats him as (for display + report) */
+function displayAge() {
+  const age = (typeof state !== 'undefined' && state && state.age) || 'auto';
+  return age === 'auto' ? 8 + adState().meta.autoBase : age;
 }
 
 /* difficulty tag for the stars line */
@@ -109,9 +130,9 @@ function adaptivePick(mode, lang, arr, idFn) {
 }
 
 /* ---------- per-level knobs (4 tiers: ages 9/10/11/12) ---------- */
-const LEVEL_CHOICES = { listen: [3, 4, 5, 6], match: [3, 4, 5, 6], hunt: [3, 4, 5, 5] };
+const LEVEL_CHOICES = { listen: [3, 4, 5, 6, 7, 8, 8], match: [3, 4, 5, 6, 7, 8, 8], hunt: [3, 4, 5, 5, 6, 6, 6] };
 function choiceCount(mode, lang, poolSize) {
-  const n = (LEVEL_CHOICES[mode] || [3, 4, 5, 6])[gameLevel(mode, lang) - 1];
+  const n = (LEVEL_CHOICES[mode] || [3, 4, 5, 6, 7, 8, 8])[gameLevel(mode, lang) - 1];
   return Math.min(n, poolSize);
 }
 

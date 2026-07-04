@@ -127,7 +127,7 @@ function nextRadical() {
   const item = adaptivePick('radical', 'zh', banded, (c) => c.ch);
   const remaining = {};
   item.parts.forEach((p) => remaining[p] = (remaining[p] || 0) + 1);
-  const nDistract = [2, 3, 4, 5][lv - 1];
+  const nDistract = [2, 3, 4, 5, 6, 7, 8][lv - 1];
   const distractors = shuffle(RADICAL_POOL.filter((p) => !item.parts.includes(p))).slice(0, nDistract);
   rad = { item, remaining, placed: [], failed: false, tray: shuffle([...item.parts, ...distractors]) };
   $('radicalStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5)) + levelTag('radical', 'zh');
@@ -240,11 +240,12 @@ function nextBlend() {
   const sylN = (w) => (lang === 'ms' ? w.ms.syl : w.en.syl).length;
   const multi = ctx.theme.words.filter((w) => sylN(w) >= 2);
   const banded = levelFilter(multi.length ? multi : ctx.theme.words, (w) =>
-    lv === 1 ? sylN(w) === 2 : (lv === 2 ? sylN(w) === 3 : sylN(w) >= 3));
+    lv === 1 ? sylN(w) === 2 : (lv === 2 ? sylN(w) === 3 :
+    (lv <= 4 ? sylN(w) >= 3 : sylN(w) >= 4)));
   const word = adaptivePick('blend', lang, banded, (w) => w.emoji);
   const syls = (lang === 'ms' ? w2syl(word, 'ms') : w2syl(word, 'en')).slice();
   // distractor syllables from other words — more of them at higher levels
-  const nDistract = gameLevel('blend', lang) === 1 ? 1 : 2;
+  const nDistract = Math.min(4, [1, 2, 2, 3, 3, 4, 4][gameLevel('blend', lang) - 1]);
   const others = shuffle(ctx.theme.words.filter((w) => w.emoji !== word.emoji));
   const dPool = [...new Set(others.flatMap((o) => w2syl(o, lang)))].filter((s) => !syls.includes(s));
   const tray = shuffle([...syls, ...dPool.slice(0, nDistract)]);
