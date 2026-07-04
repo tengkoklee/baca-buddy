@@ -781,3 +781,28 @@ body.dys {
 }
 
 .seg-wrap { flex-wrap: wrap; }
+
+/* ---------- ball tiers ---------- */
+.pokeball.great { background: linear-gradient(to bottom, #2A6BD1 0%, #2A6BD1 45%, #2b2b2b 45%, #2b2b2b 55%, #fff 55%, #fff 100%); }
+.pokeball.ultra { background: linear-gradient(to bottom, #2b2b2b 0%, #2b2b2b 30%, #F5C518 30%, #F5C518 45%, #2b2b2b 45%, #2b2b2b 55%, #fff 55%, #fff 100%); }
+
+/* ---------- ball bag ---------- */
+.bag { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 460px; }
+.bag-row {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg); border: 3px solid var(--card-edge); border-radius: 18px;
+  padding: 10px 14px;
+}
+.bag-row .pokeball { width: 44px; height: 44px; flex-shrink: 0; }
+.bag-row .pokeball::after { width: 12px; height: 12px; }
+.bag-info { flex: 1; display: flex; flex-direction: column; text-align: left; }
+.bag-info b { font-size: 1.1rem; }
+.bag-hint { font-size: .85rem; color: var(--ink-soft); }
+.bag-count { font-weight: 700; font-size: 1.2rem; }
+.bag-throw[disabled] { opacity: .35; pointer-events: none; }
+.bag-fuse {
+  align-self: center; min-height: 44px; padding: 4px 18px;
+  font-family: inherit; font-weight: 700; font-size: .95rem; color: var(--ink);
+  background: var(--good-bg); border: 3px dashed var(--good); border-radius: 999px; cursor: pointer;
+}
+.bag-fuse[disabled] { opacity: .35; border-color: var(--card-edge); background: var(--bg); pointer-events: none; }

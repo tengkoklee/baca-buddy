@@ -12,7 +12,14 @@
 'use strict';
 
 const STARS_PER_BALL = 10;
-const LEGENDARY_EVERY = 25;   // every 25 catches arms a guaranteed-legendary ball
+const FUSE_N = 5;             // 5 balls fuse into 1 of the next tier
+const BALL_TIERS = {
+  poke:  { emoji: '⚪', cls: '',      next: 'great' },
+  great: { emoji: '🔵', cls: 'great', next: 'ultra' },
+  ultra: { emoji: '🟡', cls: 'ultra', next: null }
+};
+/* evolved forms = any id that appears as a result in an evolution chain */
+const EVOLVED_IDS = new Set(Object.values(EVOLVES).flatMap((v) => Array.isArray(v) ? v : [v]));
 
 /* ---------- persistent reward state ---------- */
 function rwLoad() {
@@ -25,7 +32,7 @@ function rwState() {
   return {
     stars: d.stars || 0, balls: d.balls || 0,
     caught: d.caught || [], goalDays: d.goalDays || {},
-    legendaryPending: d.legendaryPending || 0,
+    greatBalls: d.greatBalls || 0, ultraBalls: d.ultraBalls || 0,
     items: d.items || { berry: 0, toy: 0, gift: 0 },
     sinceItem: d.sinceItem || 0,
     pet: d.pet || null,                 // active pal's pokemon id
@@ -88,29 +95,56 @@ function weightedPick(pool) {
   return pick(bag.length ? bag : pool);
 }
 
-function pickCatch() {
+/* what each ball tier can catch:
+   ⚪ Poké  — base (un-evolved) Pokémon
+   🔵 Great — evolved forms (the cool ones)
+   🟡 Ultra — LEGENDARIES */
+function pickCatch(tier) {
+  tier = tier || 'poke';
   const d = rwState();
   const caught = new Set(d.caught);
-  const un = (t) => POKEMON.filter((p) => !caught.has(p.id) && (t ? p.tier === t : p.tier !== 'legendary'));
-  if (!caught.size) return POKEMON.find((p) => p.id === 25);          // Pikachu first!
-  if (d.legendaryPending > 0 && un('legendary').length) return pick(un('legendary'));
-  const pool = un();
-  if (pool.length) return weightedPick(pool);
-  if (un('legendary').length) return pick(un('legendary'));           // only legendaries left
-  return pick(POKEMON);                                               // dex complete — free rethrows
+  const un = (f) => POKEMON.filter((p) => !caught.has(p.id) && f(p));
+  if (!caught.size && tier === 'poke') return POKEMON.find((p) => p.id === 25);   // Pikachu first!
+  let pool;
+  if (tier === 'ultra') {
+    pool = un((p) => p.tier === 'legendary');
+    if (!pool.length) pool = un((p) => EVOLVED_IDS.has(p.id));         // all legends caught
+  } else if (tier === 'great') {
+    pool = un((p) => p.tier !== 'legendary' && EVOLVED_IDS.has(p.id));
+    if (!pool.length) pool = un((p) => p.tier !== 'legendary');
+  } else {
+    pool = un((p) => p.tier !== 'legendary' && !EVOLVED_IDS.has(p.id));
+    if (!pool.length) pool = un((p) => p.tier !== 'legendary');
+  }
+  if (!pool.length) pool = un(() => true);                             // near-complete dex
+  if (!pool.length) pool = POKEMON;                                    // complete — free rethrows
+  return weightedPick(pool);
 }
 
-function doCatch(chosen) {
+function ballCount(d, tier) {
+  return tier === 'ultra' ? d.ultraBalls : (tier === 'great' ? d.greatBalls : d.balls);
+}
+
+function doCatch(chosen, tier) {
+  tier = tier || 'poke';
   const d = rwState();
-  if (d.balls <= 0) return null;
-  const mon = chosen || pickCatch();
-  d.balls--;
-  if (mon.tier === 'legendary' && d.legendaryPending > 0) d.legendaryPending--;
+  if (ballCount(d, tier) <= 0) return null;
+  const mon = chosen || pickCatch(tier);
+  if (tier === 'ultra') d.ultraBalls--; else if (tier === 'great') d.greatBalls--; else d.balls--;
   if (!d.caught.includes(mon.id)) d.caught.push(mon.id);
-  // collection milestone → arm a guaranteed-legendary ball
-  if (d.caught.length > 0 && d.caught.length % LEGENDARY_EVERY === 0) { d.legendaryPending++; d.balls++; }
   rwSave(d);
   return mon;
+}
+
+/* 5 balls of a tier fuse into 1 of the next tier up */
+function fuseBalls(tier) {
+  const d = rwState();
+  const next = BALL_TIERS[tier].next;
+  if (!next || ballCount(d, tier) < FUSE_N) return false;
+  if (tier === 'poke') { d.balls -= FUSE_N; d.greatBalls++; }
+  else { d.greatBalls -= FUSE_N; d.ultraBalls++; }
+  rwSave(d);
+  return true;
 }
 
 /* ---------- buddy of the day: rotates daily through HIS caught Pokémon ---------- */
@@ -140,15 +174,17 @@ function renderRewards() {
     <button class="poke-buddy" id="pokeBuddyBtn" title="Choose a pal">
       <span class="buddy-name">${t('pick_a_pal')}</span>
     </button>` : '');
+  const anyBall = d.balls > 0 || d.greatBalls > 0 || d.ultraBalls > 0;
+  const counts = `⚪${d.balls}${d.greatBalls ? ` 🔵${d.greatBalls}` : ''}${d.ultraBalls ? ` 🟡${d.ultraBalls}` : ''}`;
   el.innerHTML = `${buddyHTML}
-    <button class="poke-ball-btn ${d.balls > 0 ? 'ready' : ''}" id="pokeCatchBtn">
+    <button class="poke-ball-btn ${anyBall ? 'ready' : ''}" id="pokeCatchBtn">
       <span class="pokeball"></span>
-      <span class="lbl">${d.balls > 0 ? t('open_ball', { n: d.balls }) : t('to_go', { n: toNext })}</span>
+      <span class="lbl">${anyBall ? counts : t('to_go', { n: toNext })}</span>
     </button>
     <span class="dose-meter poke-meter"><span class="dose-fill" style="width:${pct}%"></span></span>
     <span class="dose-item">⭐ ${d.stars}</span>
     <button class="iconbtn small" id="pokeDexBtn">📕 <span class="lbl">Pokédex ${d.caught.length}/${POKEMON.length}</span></button>`;
-  $('pokeCatchBtn').addEventListener('click', openCatch);
+  $('pokeCatchBtn').addEventListener('click', openBallBag);
   $('pokeDexBtn').addEventListener('click', openDex);
   const bb = $('pokeBuddyBtn');
   if (bb) bb.addEventListener('click', openPet);   // companion opens the pal screen
@@ -158,24 +194,65 @@ function renderRewards() {
 /* ---------- catch ceremony ---------- */
 let catchMon = null;
 
-let wild = null;   // { mon, misses, wanderTimer, throwing, done }
+let wild = null;   // { mon, tier, misses, wanderTimer, throwing, done }
 
-function openCatch() {
+/* the Ball Bag: see all three tiers, fuse 5→1, choose which ball to throw */
+function openBallBag() {
   const d = rwState();
-  if (d.balls <= 0) {
+  if (d.balls <= 0 && d.greatBalls <= 0 && d.ultraBalls <= 0) {
     speak(`${STARS_PER_BALL - (d.stars % STARS_PER_BALL)} more stars to get a Pokeball!`, 'en');
     return;
   }
+  renderBallBag();
+  $('catchClose').style.display = '';
+  $('catchBack').classList.add('open');
+}
+
+function renderBallBag() {
+  const d = rwState();
+  const row = (tier, label, hint) => `
+    <div class="bag-row">
+      <span class="pokeball ${BALL_TIERS[tier].cls}"></span>
+      <div class="bag-info"><b>${label}</b><span class="bag-hint">${hint}</span></div>
+      <span class="bag-count">×${ballCount(d, tier)}</span>
+      <button class="iconbtn small bag-throw" data-tier="${tier}" ${ballCount(d, tier) < 1 ? 'disabled' : ''}>🎯 <span class="lbl">${t('bag_throw')}</span></button>
+    </div>
+    ${BALL_TIERS[tier].next ? `
+    <button class="bag-fuse" data-tier="${tier}" ${ballCount(d, tier) < FUSE_N ? 'disabled' : ''}>
+      ⬇️ ${t('bag_fuse', { n: FUSE_N, from: BALL_TIERS[tier].emoji, to: BALL_TIERS[BALL_TIERS[tier].next].emoji })}
+    </button>` : ''}`;
+  $('catchStage').innerHTML = `
+    <div class="bag">
+      ${row('poke', t('bag_poke'), t('bag_poke_hint'))}
+      ${row('great', t('bag_great'), t('bag_great_hint'))}
+      ${row('ultra', t('bag_ultra'), t('bag_ultra_hint'))}
+    </div>`;
+  $('catchStage').querySelectorAll('.bag-throw').forEach((b) => b.addEventListener('click', () => openCatch(b.dataset.tier)));
+  $('catchStage').querySelectorAll('.bag-fuse').forEach((b) => b.addEventListener('click', async () => {
+    if (fuseBalls(b.dataset.tier)) {
+      confetti();
+      const next = BALL_TIERS[b.dataset.tier].next;
+      toast(`${BALL_TIERS[next].emoji} ${t('bag_fused', { ball: t('bag_' + next) })}`);
+      await speak(t('bag_' + next) + '!', 'en');
+      renderBallBag(); renderRewards();
+    }
+  }));
+}
+
+function openCatch(tier) {
+  tier = tier || 'poke';
+  const d = rwState();
+  if (ballCount(d, tier) <= 0) return;
   catchMon = null;
-  wild = { mon: pickCatch(), misses: 0, throwing: false, done: false };
+  wild = { mon: pickCatch(tier), tier, misses: 0, throwing: false, done: false };
   $('catchStage').innerHTML = `
     <div class="wild-arena" id="wildArena">
       <img class="wild-sprite" id="wildSprite" alt="wild pokemon"
            src="${POKE_ANI(wild.mon.id)}"
            onerror="this.onerror=null; this.src='${POKE_ART(wild.mon.id)}'; this.style.height='110px';" />
-      <div class="throw-ball" id="throwBall"><span class="pokeball"></span></div>
+      <div class="throw-ball" id="throwBall"><span class="pokeball ${BALL_TIERS[tier].cls}"></span></div>
     </div>
-    <div class="catch-caption">${t('catch_throw')}</div>`;
+    <div class="catch-caption">${BALL_TIERS[tier].emoji} ${t('catch_throw')}</div>`;
   $('catchClose').style.display = 'none';
   $('catchBack').classList.add('open');
   playCry(wild.mon.id);
@@ -244,7 +321,7 @@ async function wildHit(ball, sprite) {
   sprite.style.display = 'none';                           // zapped into the ball!
   ball.classList.remove('flying');
   ball.querySelector('.pokeball').classList.add('wobbling');
-  catchMon = doCatch(wild.mon);                            // commit the catch
+  catchMon = doCatch(wild.mon, wild.tier);                 // commit with the ball used
   if (!catchMon) { closeCatch(); return; }
   setTimeout(() => revealCatch(), 1600);
 }
@@ -280,8 +357,9 @@ function closeCatch() {
   if (wild && wild.wanderTimer) clearInterval(wild.wanderTimer);
   $('catchBack').classList.remove('open');
   renderRewards();
-  // more balls waiting? gentle hint
-  if (rwState().balls > 0) setTimeout(openCatch, 350);
+  // more balls waiting? back to the bag
+  const d = rwState();
+  if (catchMon && (d.balls > 0 || d.greatBalls > 0 || d.ultraBalls > 0)) setTimeout(openBallBag, 350);
 }
 
 /* ---------- Pokédex ---------- */

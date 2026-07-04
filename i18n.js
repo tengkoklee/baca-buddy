@@ -95,6 +95,15 @@ const STR = {
   tp_stage_test: { en: '3️⃣ Test',  zh: '3️⃣ 听写',  ms: '3️⃣ Ujian' },
   tp_stage_hint: { en: 'Start with Copy, move up when ready!', zh: '先从抄写开始，准备好了再升级！', ms: 'Mula dengan Salin, naik tahap bila sedia!' },
   catch_throw:   { en: 'Flick the ball at the Pokémon!', zh: '把精灵球扔向宝可梦！', ms: 'Baling Pokéball ke arah Pokémon!' },
+  bag_poke:      { en: 'Poké Ball',  zh: '精灵球',   ms: 'Poké Ball' },
+  bag_great:     { en: 'Great Ball', zh: '超级球',   ms: 'Great Ball' },
+  bag_ultra:     { en: 'Ultra Ball', zh: '高级球',   ms: 'Ultra Ball' },
+  bag_poke_hint:  { en: 'catches Pokémon', zh: '抓普通宝可梦', ms: 'tangkap Pokémon' },
+  bag_great_hint: { en: 'catches EVOLVED Pokémon!', zh: '抓进化形态宝可梦！', ms: 'tangkap Pokémon EVOLVED!' },
+  bag_ultra_hint: { en: 'catches LEGENDARY Pokémon!', zh: '抓传说宝可梦！', ms: 'tangkap Pokémon LEGENDARY!' },
+  bag_throw:     { en: 'Throw', zh: '投掷', ms: 'Baling' },
+  bag_fuse:      { en: 'Fuse {n} {from} into 1 {to}', zh: '{n} 个 {from} 合成 1 个 {to}', ms: 'Gabung {n} {from} jadi 1 {to}' },
+  bag_fused:     { en: 'You made a {ball}!', zh: '合成了一个{ball}！', ms: 'Kamu dapat {ball}!' },
 
   /* settings */
   set_difficulty: { en: '🎂 Age level', zh: '🎂 年龄级别', ms: '🎂 Tahap umur' },
