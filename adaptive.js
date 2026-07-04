@@ -38,7 +38,7 @@ function recordAnswer(mode, lang, id, ok) {
 
   // rolling accuracy → level
   const lk = `${mode}|${lang}`;
-  const lv = d.levels[lk] || { level: 1, ema: 0.7, n: 0, lastMove: 0 };
+  const lv = d.levels[lk] || { level: 2, ema: 0.7, n: 0, lastMove: 0 };   // adaptive floor 2
   lv.ema = lv.ema * 0.85 + (ok ? 1 : 0) * 0.15;
   lv.n++;
   const settled = lv.n - lv.lastMove >= LEVEL_MIN_ANSWERS;
@@ -51,15 +51,19 @@ function recordAnswer(mode, lang, id, ok) {
   adSave(d);
 }
 
+/* The effective level. A manual difficulty (1/2/3) set in Settings overrides
+   the adaptive engine; 'auto' lets accuracy drive it. Default preset = 2. */
 function gameLevel(mode, lang) {
-  const lv = adState().levels[`${mode}|${lang}`];
-  return lv ? lv.level : 1;
+  const d = (typeof state !== 'undefined' && state) ? state.difficulty : 2;
+  if (d === 1 || d === 2 || d === 3) return d;             // manual fixed level
+  const lv = adState().levels[`${mode}|${lang}`];          // 'auto' → adaptive
+  return lv ? lv.level : 2;                                // adaptive floor now 2
 }
 
-/* subtle difficulty tag for the stars line (hidden at level 1) */
+/* difficulty tag for the stars line */
 function levelTag(mode, lang) {
   const l = gameLevel(mode, lang);
-  return l > 1 ? `  ·  Lv${l}` : '';
+  return `  ·  Lv${l}`;
 }
 
 /* ---------- mastery-weighted item picker (replaces plain shuffle-bags) ---------- */

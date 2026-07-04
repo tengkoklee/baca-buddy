@@ -96,6 +96,9 @@ const STR = {
   tp_stage_hint: { en: 'Start with Copy, move up when ready!', zh: '先从抄写开始，准备好了再升级！', ms: 'Mula dengan Salin, naik tahap bila sedia!' },
   catch_throw:   { en: 'Flick the ball at the Pokémon!', zh: '把精灵球扔向宝可梦！', ms: 'Baling Pokéball ke arah Pokémon!' },
 
+  /* settings */
+  set_difficulty: { en: '🎯 Difficulty', zh: '🎯 难度', ms: '🎯 Kesukaran' },
+
   /* practice tracker */
   days:      { en: '🔥 {n} day streak', zh: '🔥 连续 {n} 天', ms: '🔥 {n} hari berturut' },
   min_today: { en: '{m}/10 min today',  zh: '今天 {m}/10 分钟', ms: '{m}/10 min hari ini' },
@@ -131,6 +134,7 @@ function applyStaticI18n() {
   set('#screen-tracepick .screen-title span:last-child', t('title_tracepick'));
   set('#screen-pet .screen-title span:last-child', t('title_pet'));
   set('#testTitle', t('menu_test'));
+  set('#lblDiff', t('set_difficulty'));
   // prompts
   set('#listenQ', t('listen_q'));
   set('#screen-match .q', t('match_q'));

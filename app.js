@@ -19,7 +19,7 @@ const shuffle = (arr) => {
 const ALL_WORDS = THEMES.flatMap((t) => t.words.map((w) => ({ ...w, themeId: t.id })));
 
 /* ---------- persistent state ---------- */
-const DEFAULTS = { speed: 0.75, font: 'lexend', lang: 'en', sound: true, topics: ['all'] };
+const DEFAULTS = { speed: 0.75, font: 'lexend', lang: 'en', sound: true, topics: ['all'], difficulty: 2 };
 let state = loadState();
 
 function loadState() {
@@ -28,13 +28,14 @@ function loadState() {
     const s = { ...DEFAULTS, ...raw };
     if (!['en', 'zh', 'ms'].includes(s.lang)) s.lang = 'en';   // migrate away from old 'mix'
     if (!Array.isArray(raw.topics) || !raw.topics.length) s.topics = raw.topic ? [raw.topic] : ['all'];  // migrate old single topic
+    if (![1, 2, 3, 'auto'].includes(s.difficulty)) s.difficulty = 2;
     return s;
   }
   catch (e) { return { ...DEFAULTS }; }
 }
 function saveState() {
   try { localStorage.setItem('bacaBuddy', JSON.stringify({
-    speed: state.speed, font: state.font, lang: state.lang, sound: state.sound, topics: state.topics
+    speed: state.speed, font: state.font, lang: state.lang, sound: state.sound, topics: state.topics, difficulty: state.difficulty
   })); } catch (e) {}
 }
 
@@ -648,7 +649,16 @@ function applySound() {
   $('soundBtn').classList.toggle('muted', !state.sound);   // obvious amber warning when muted
 }
 
+function applyDifficultyUI() {
+  const seg = $('segDiff'); if (!seg) return;
+  seg.querySelectorAll('button').forEach((b) => {
+    const v = b.dataset.diff === 'auto' ? 'auto' : +b.dataset.diff;
+    b.classList.toggle('on', state.difficulty === v);
+  });
+}
+
 function refreshSettingsUI() {
+  applyDifficultyUI();
   $('segSpeed').querySelectorAll('button').forEach((b) => b.classList.toggle('on', +b.dataset.speed === state.speed));
   $('segFont').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.font === state.font));
 }
@@ -731,6 +741,10 @@ function init() {
   }));
   $('segFont').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
     state.font = b.dataset.font; applyFont(); saveState(); refreshSettingsUI();
+  }));
+  $('segDiff').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+    state.difficulty = b.dataset.diff === 'auto' ? 'auto' : +b.dataset.diff;
+    saveState(); applyDifficultyUI();
   }));
 
   goHome();
