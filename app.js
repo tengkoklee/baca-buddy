@@ -338,7 +338,12 @@ function buildHome() {
   });
 }
 
-function goHome() { show('screen-home'); }
+function maybeApplyPendingUpdate() {
+  if (window.__pendingUpdate) { window.__pendingUpdate = false; location.reload(); }
+}
+
+function goHome() {
+  maybeApplyPendingUpdate(); show('screen-home'); }
 
 /* =========================================================================
    THEME PICKER
@@ -682,7 +687,20 @@ function updateVoiceNote() {
     : '';
 }
 
-function openSheet() { refreshSettingsUI(); updateVoiceNote(); $('sheetBack').classList.add('open'); }
+function openSheet() {
+  refreshSettingsUI(); updateVoiceNote();
+  // show the RUNNING app version (asked from the live service worker)
+  try {
+    navigator.serviceWorker.addEventListener('message', function onMsg(e) {
+      if (e.data && e.data.version) {
+        const el = $('verTag'); if (el) el.textContent = 'Baca Buddy ' + e.data.version;
+        navigator.serviceWorker.removeEventListener('message', onMsg);
+      }
+    });
+    navigator.serviceWorker.controller && navigator.serviceWorker.controller.postMessage('version');
+  } catch (e) {}
+  $('sheetBack').classList.add('open');
+}
 function closeSheet() { $('sheetBack').classList.remove('open'); }
 
 /* =========================================================================

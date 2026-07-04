@@ -3,8 +3,8 @@
    everything and old caches are dropped on activate. */
 importScripts('audio-manifest.js');   // AUDIO_MAP: bundled speech clips
 
-const VERSION = 'baca-v29';
-const RUNTIME = 'baca-runtime-v29';
+const VERSION = 'baca-v30';
+const RUNTIME = 'baca-runtime-v30';
 
 const CORE = [
   '.',
@@ -58,6 +58,10 @@ self.addEventListener('activate', (e) => {
     await Promise.all(keys.filter((k) => !KEEP.includes(k)).map((k) => caches.delete(k)));
     self.clients.claim();
   })());
+});
+
+self.addEventListener('message', (e) => {
+  if (e.data === 'version' && e.source) e.source.postMessage({ version: VERSION });
 });
 
 self.addEventListener('fetch', (e) => {

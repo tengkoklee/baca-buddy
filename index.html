@@ -282,6 +282,7 @@
       </div>
 
       <button class="iconbtn" id="sheetClose" style="width:100%; margin-top:8px;"><span class="lbl">Done ✓</span></button>
+      <p class="hint-line" id="verTag" style="opacity:.6"></p>
       <p class="hint-line" id="voiceNote"></p>
     </div>
   </div>
@@ -313,9 +314,27 @@
   <script src="testmode.js"></script>
   <script src="rewards.js"></script>
   <script>
-    // PWA: register the service worker (needs HTTPS or localhost)
+    // PWA: register + SELF-UPDATE. The app checks for a new version on every
+    // launch/foreground (and half-hourly), and reloads itself once the new
+    // service worker takes over — no more double open-close on the iPad.
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(() => {/* http LAN: fine, still works online */});
+      navigator.serviceWorker.register('sw.js').then((reg) => {
+        const check = () => { try { reg.update(); } catch (e) {} };
+        check();
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') check();
+        });
+        setInterval(check, 30 * 60 * 1000);
+      }).catch(() => {/* http LAN: fine, still works online */});
+
+      let hadController = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!hadController) { hadController = true; return; }   // first install — no reload
+        // a NEW version just took control → refresh into it (gently: not mid-game)
+        const onHome = document.getElementById('screen-home')?.classList.contains('active');
+        if (onHome) location.reload();
+        else window.__pendingUpdate = true;                     // reload when he returns home
+      });
     }
   </script>
 </body>
