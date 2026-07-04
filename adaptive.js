@@ -1,19 +1,20 @@
 /* =========================================================================
    Baca Buddy — adaptive difficulty layer (GraphoGame pattern)
    1) Per-item mastery (Leitner boxes 0-5): every answer moves the item.
-   2) Spaced repetition: low-box items are picked far more often; mastered
-      items fade to occasional review — never disappear.
-   3) Invisible levelling (1-3) per game+language from a rolling accuracy
-      EMA: >85% over enough answers → harder; <50% → gently easier.
+   2) Spaced repetition: low-box items picked far more often. A word answered
+      with NO mistake is retired until the NEXT DAY (won't show again today).
+   3) Difficulty is set by AGE (9/10/11/12) as a base level, then progresses
+      up as words are completed and eases down on failure.
    All progress lives in localStorage ('bacaMastery') on the child's iPad.
    ========================================================================= */
 
 'use strict';
 
 const BOX_WEIGHT = [8, 5, 3, 2, 1, 0.5];   // box 0 (weak) … box 5 (mastered)
-const LEVEL_MIN_ANSWERS = 10;              // answers before a level can move
+const LEVEL_MIN_ANSWERS = 8;               // answers before the progress nudge can move
 const LEVEL_UP_EMA = 0.85;
 const LEVEL_DOWN_EMA = 0.5;
+const AGE_BASE = { 9: 1, 10: 2, 11: 3, 12: 4 };   // age → base difficulty level
 
 function adLoad() {
   try { return JSON.parse(localStorage.getItem('bacaMastery') || '{}'); }
@@ -25,60 +26,77 @@ function adState() {
   return { items: d.items || {}, levels: d.levels || {}, last: d.last || {} };
 }
 
+/* next local midnight — a clean word hides until then */
+function nextMidnight() { const d = new Date(); d.setHours(24, 0, 0, 0); return d.getTime(); }
+
+/* track whether the CURRENT word was stumbled before being answered right */
+let _curKey = '', _curMiss = false;
+
 /* ---------- record every answer ---------- */
 function recordAnswer(mode, lang, id, ok) {
   const d = adState();
   const ik = `${mode}|${lang}|${id}`;
+  if (ik !== _curKey) { _curKey = ik; _curMiss = false; }   // new word → reset miss flag
   const it = d.items[ik] || { box: 0, seen: 0, right: 0, wrong: 0 };
   it.seen++;
-  if (ok) { it.right++; it.box = Math.min(5, it.box + 1); }
-  else { it.wrong++; it.box = Math.max(0, it.box - 1); }
+  if (ok) {
+    it.right++; it.box = Math.min(5, it.box + 1);
+    // completed with NO mistake this encounter → retire until tomorrow
+    if (!_curMiss) it.retire = nextMidnight();
+  } else {
+    it.wrong++; it.box = Math.max(0, it.box - 1);
+    _curMiss = true;
+    it.retire = 0;                                          // a stumble un-retires it
+  }
   it.t = Date.now();
   d.items[ik] = it;
 
-  // rolling accuracy → level
+  // progress nudge: rolling accuracy pushes the level up (mastery) / down (failure)
   const lk = `${mode}|${lang}`;
-  const lv = d.levels[lk] || { level: 2, ema: 0.7, n: 0, lastMove: 0 };   // adaptive floor 2
+  const lv = d.levels[lk] || { level: 2, ema: 0.7, n: 0, lastMove: 0 };
   lv.ema = lv.ema * 0.85 + (ok ? 1 : 0) * 0.15;
   lv.n++;
   const settled = lv.n - lv.lastMove >= LEVEL_MIN_ANSWERS;
   if (settled && lv.ema > LEVEL_UP_EMA && lv.level < 3) {
-    lv.level++; lv.ema = 0.7; lv.lastMove = lv.n;
-  } else if (settled && lv.ema < LEVEL_DOWN_EMA && lv.level > 1) {
-    lv.level--; lv.ema = 0.7; lv.lastMove = lv.n;      // ease off quietly — never a fail state
+    lv.level++; lv.ema = 0.7; lv.lastMove = lv.n;           // progress upward with completion
+  } else if (!ok && lv.level > 1) {
+    lv.level--; lv.ema = 0.6; lv.lastMove = lv.n;           // a failure eases difficulty at once
   }
   d.levels[lk] = lv;
   adSave(d);
 }
 
-/* The effective level. A manual difficulty (1/2/3) set in Settings overrides
-   the adaptive engine; 'auto' lets accuracy drive it. Default preset = 2. */
+/* Effective level = age base + a small progress nudge (-1..+1), clamped 1-4. */
 function gameLevel(mode, lang) {
-  const d = (typeof state !== 'undefined' && state) ? state.difficulty : 2;
-  if (d === 1 || d === 2 || d === 3) return d;             // manual fixed level
-  const lv = adState().levels[`${mode}|${lang}`];          // 'auto' → adaptive
-  return lv ? lv.level : 2;                                // adaptive floor now 2
+  const age = (typeof state !== 'undefined' && state && state.age) || 10;
+  const base = AGE_BASE[age] || 2;
+  const lv = adState().levels[`${mode}|${lang}`];
+  const nudge = lv ? (lv.level - 2) : 0;                    // adaptive centred at 2 → -1..+1
+  return Math.max(1, Math.min(4, base + nudge));
 }
 
 /* difficulty tag for the stars line */
-function levelTag(mode, lang) {
-  const l = gameLevel(mode, lang);
-  return `  ·  Lv${l}`;
-}
+function levelTag(mode, lang) { return `  ·  Lv${gameLevel(mode, lang)}`; }
 
-/* ---------- mastery-weighted item picker (replaces plain shuffle-bags) ---------- */
+/* ---------- mastery-weighted item picker ----------
+   Skips words retired today (answered perfectly) unless that empties the pool. */
 function adaptivePick(mode, lang, arr, idFn) {
   if (!arr || !arr.length) return undefined;
   if (arr.length === 1) return arr[0];
   const d = adState();
+  const now = Date.now();
   const lastKey = `${mode}|${lang}`;
   const lastId = d.last[lastKey];
-  const pool = arr.filter((x) => idFn(x) !== lastId);      // never the same item twice in a row
-  const src = pool.length ? pool : arr;
+  const notRetired = arr.filter((x) => {
+    const it = d.items[`${mode}|${lang}|${idFn(x)}`];
+    return !(it && it.retire && it.retire > now);
+  });
+  let src = (notRetired.length ? notRetired : arr).filter((x) => idFn(x) !== lastId);
+  if (!src.length) src = notRetired.length ? notRetired : arr;   // never empty
   let total = 0;
   const weights = src.map((x) => {
     const it = d.items[`${mode}|${lang}|${idFn(x)}`];
-    const w = BOX_WEIGHT[it ? it.box : 0];                 // unseen = treated as weak → shows up early
+    const w = BOX_WEIGHT[it ? it.box : 0];                 // unseen = weak → shows early
     total += w;
     return w;
   });
@@ -90,10 +108,10 @@ function adaptivePick(mode, lang, arr, idFn) {
   return chosen;
 }
 
-/* ---------- per-level knobs ---------- */
-const LEVEL_CHOICES = { listen: [3, 4, 6], match: [3, 4, 6], hunt: [3, 4, 5] };
+/* ---------- per-level knobs (4 tiers: ages 9/10/11/12) ---------- */
+const LEVEL_CHOICES = { listen: [3, 4, 5, 6], match: [3, 4, 5, 6], hunt: [3, 4, 5, 5] };
 function choiceCount(mode, lang, poolSize) {
-  const n = (LEVEL_CHOICES[mode] || [3, 4, 6])[gameLevel(mode, lang) - 1];
+  const n = (LEVEL_CHOICES[mode] || [3, 4, 5, 6])[gameLevel(mode, lang) - 1];
   return Math.min(n, poolSize);
 }
 
@@ -101,4 +119,34 @@ function choiceCount(mode, lang, poolSize) {
 function levelFilter(arr, fn) {
   const f = arr.filter(fn);
   return f.length >= 2 ? f : arr;
+}
+
+/* ---------- progress report data (per language) ----------
+   Aggregates the mastery boxes across all game modes into per-word status. */
+function progressReport(lang) {
+  const d = adState();
+  const now = Date.now();
+  const byWord = {};   // word/id → best box seen across modes
+  Object.keys(d.items).forEach((k) => {
+    const [mode, l, id] = k.split('|');
+    if (l !== lang) return;
+    const it = d.items[k];
+    const cur = byWord[id];
+    if (!cur || it.box > cur.box) byWord[id] = { box: it.box, retire: it.retire || 0, seen: it.seen, right: it.right, wrong: it.wrong };
+    else { cur.seen += it.seen; cur.right += it.right; cur.wrong += it.wrong; }
+  });
+  const words = Object.entries(byWord).map(([id, v]) => ({ id, ...v }));
+  const mastered = words.filter((w) => w.box >= 5).length;
+  const strong = words.filter((w) => w.box >= 3 && w.box < 5).length;
+  const learning = words.filter((w) => w.box >= 1 && w.box < 3).length;
+  const struggling = words.filter((w) => w.box === 0 && w.seen > 0).length;
+  const retiredToday = words.filter((w) => w.retire > now).length;
+  const totalRight = words.reduce((a, w) => a + (w.right || 0), 0);
+  const totalSeen = words.reduce((a, w) => a + (w.seen || 0), 0);
+  const accuracy = totalSeen ? Math.round(100 * totalRight / totalSeen) : 0;
+  // words that most need work (low box, seen at least once)
+  const toReview = words.filter((w) => w.box <= 1 && w.seen > 0)
+    .sort((a, b) => a.box - b.box).slice(0, 12).map((w) => w.id);
+  const level = Math.max(gameLevel('listen', lang), gameLevel('build', lang), gameLevel('trace', lang));
+  return { seen: words.length, mastered, strong, learning, struggling, retiredToday, accuracy, toReview, level };
 }

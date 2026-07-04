@@ -127,7 +127,7 @@ function nextRadical() {
   const item = adaptivePick('radical', 'zh', banded, (c) => c.ch);
   const remaining = {};
   item.parts.forEach((p) => remaining[p] = (remaining[p] || 0) + 1);
-  const nDistract = [2, 3, 4][lv - 1];
+  const nDistract = [2, 3, 4, 5][lv - 1];
   const distractors = shuffle(RADICAL_POOL.filter((p) => !item.parts.includes(p))).slice(0, nDistract);
   rad = { item, remaining, placed: [], failed: false, tray: shuffle([...item.parts, ...distractors]) };
   $('radicalStars').textContent = '⭐'.repeat(Math.min(ctx.streak, 5)) + levelTag('radical', 'zh');
@@ -191,7 +191,7 @@ let homo = null;  // { set, target }
 function nextHomo() {
   const lv = gameLevel('homo', 'zh');
   const banded = levelFilter(HOMOPHONE_SETS, (s) =>
-    lv === 1 ? s.opts.length === 2 : (lv === 3 ? s.opts.length >= 3 : true));
+    lv === 1 ? s.opts.length === 2 : (lv >= 3 ? s.opts.length >= 3 : true));
   const set = adaptivePick('homo', 'zh', banded, (s) => s.py);
   const target = pick(set.opts);
   homo = { set, target };

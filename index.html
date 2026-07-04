@@ -64,6 +64,12 @@
       <div id="testArea"></div>
     </section>
 
+    <!-- ============ PROGRESS REPORT ============ -->
+    <section class="screen" id="screen-report">
+      <div class="screen-title"><span class="big">📊</span> <span id="reportTitle">Progress Report</span></div>
+      <div id="reportArea"></div>
+    </section>
+
     <!-- ============ POKÉMON PAL ============ -->
     <section class="screen" id="screen-pet">
       <div class="screen-title"><span class="big">💛</span> <span>My Pokémon Pal</span></div>
@@ -250,13 +256,17 @@
       </div>
 
       <div class="set-row">
-        <div class="label" id="lblDiff">🎯 Difficulty</div>
+        <div class="label" id="lblDiff">🎂 Age level</div>
         <div class="seg" id="segDiff">
-          <button data-diff="1">🟢 Easy</button>
-          <button data-diff="2">🟡 Medium</button>
-          <button data-diff="3">🔴 Hard</button>
-          <button data-diff="auto">✨ Auto</button>
+          <button data-age="9">9</button>
+          <button data-age="10">10</button>
+          <button data-age="11">11</button>
+          <button data-age="12">12</button>
         </div>
+      </div>
+
+      <div class="set-row">
+        <button class="iconbtn" id="reportBtn" style="width:100%"><span class="lbl" id="lblReport">📊 See progress report</span></button>
       </div>
 
       <div class="set-row">

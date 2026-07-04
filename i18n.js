@@ -97,7 +97,23 @@ const STR = {
   catch_throw:   { en: 'Flick the ball at the Pokémon!', zh: '把精灵球扔向宝可梦！', ms: 'Baling Pokéball ke arah Pokémon!' },
 
   /* settings */
-  set_difficulty: { en: '🎯 Difficulty', zh: '🎯 难度', ms: '🎯 Kesukaran' },
+  set_difficulty: { en: '🎂 Age level', zh: '🎂 年龄级别', ms: '🎂 Tahap umur' },
+  see_report:  { en: '📊 See progress report', zh: '📊 查看进度报告', ms: '📊 Lihat laporan kemajuan' },
+  report_scr:  { en: 'Progress Report', zh: '进度报告', ms: 'Laporan Kemajuan' },
+  rep_title:   { en: "{name}'s Progress", zh: '{name} 的学习进度', ms: 'Kemajuan {name}' },
+  rep_age:     { en: 'age {n}', zh: '{n} 岁', ms: 'umur {n}' },
+  rep_days:    { en: '{n} days practised', zh: '练习了 {n} 天', ms: '{n} hari berlatih' },
+  rep_hours:   { en: 'hours total', zh: '小时', ms: 'jam jumlah' },
+  rep_caught:  { en: '{n} Pokémon', zh: '{n} 只宝可梦', ms: '{n} Pokémon' },
+  rep_mastered:   { en: 'Mastered', zh: '已掌握', ms: 'Dikuasai' },
+  rep_strong:     { en: 'Strong',   zh: '熟练',  ms: 'Kukuh' },
+  rep_learning:   { en: 'Learning', zh: '学习中', ms: 'Belajar' },
+  rep_struggling: { en: 'Needs work', zh: '待加强', ms: 'Perlu latihan' },
+  rep_seen:    { en: '{n} words seen', zh: '学过 {n} 个词', ms: '{n} perkataan dilihat' },
+  rep_resting: { en: '{n} resting till tomorrow', zh: '{n} 个明天再练', ms: '{n} berehat esok' },
+  rep_practise_next: { en: 'Practise these next:', zh: '接下来练这些：', ms: 'Latih yang ini:' },
+  rep_notyet:  { en: 'No practice yet — play a few games first!', zh: '还没有练习记录 — 先玩几个游戏吧！', ms: 'Belum berlatih — main dulu!' },
+  rep_print:   { en: 'Print / Save PDF', zh: '打印 / 保存 PDF', ms: 'Cetak / Simpan PDF' },
 
   /* practice tracker */
   days:      { en: '🔥 {n} day streak', zh: '🔥 连续 {n} 天', ms: '🔥 {n} hari berturut' },
@@ -135,6 +151,8 @@ function applyStaticI18n() {
   set('#screen-pet .screen-title span:last-child', t('title_pet'));
   set('#testTitle', t('menu_test'));
   set('#lblDiff', t('set_difficulty'));
+  set('#lblReport', t('see_report'));
+  set('#reportTitle', t('report_scr'));
   // prompts
   set('#listenQ', t('listen_q'));
   set('#screen-match .q', t('match_q'));

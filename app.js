@@ -19,7 +19,7 @@ const shuffle = (arr) => {
 const ALL_WORDS = THEMES.flatMap((t) => t.words.map((w) => ({ ...w, themeId: t.id })));
 
 /* ---------- persistent state ---------- */
-const DEFAULTS = { speed: 0.75, font: 'lexend', lang: 'en', sound: true, topics: ['all'], difficulty: 2 };
+const DEFAULTS = { speed: 0.75, font: 'lexend', lang: 'en', sound: true, topics: ['all'], age: 10 };
 let state = loadState();
 
 function loadState() {
@@ -28,14 +28,17 @@ function loadState() {
     const s = { ...DEFAULTS, ...raw };
     if (!['en', 'zh', 'ms'].includes(s.lang)) s.lang = 'en';   // migrate away from old 'mix'
     if (!Array.isArray(raw.topics) || !raw.topics.length) s.topics = raw.topic ? [raw.topic] : ['all'];  // migrate old single topic
-    if (![1, 2, 3, 'auto'].includes(s.difficulty)) s.difficulty = 2;
+    if (![9, 10, 11, 12].includes(raw.age)) {   // migrate old Easy/Med/Hard/Auto → nearest age
+      const map = { 1: 9, 2: 10, 3: 11, auto: 10 };
+      s.age = map[raw.difficulty] || 10;
+    }
     return s;
   }
   catch (e) { return { ...DEFAULTS }; }
 }
 function saveState() {
   try { localStorage.setItem('bacaBuddy', JSON.stringify({
-    speed: state.speed, font: state.font, lang: state.lang, sound: state.sound, topics: state.topics, difficulty: state.difficulty
+    speed: state.speed, font: state.font, lang: state.lang, sound: state.sound, topics: state.topics, age: state.age
   })); } catch (e) {}
 }
 
@@ -651,10 +654,7 @@ function applySound() {
 
 function applyDifficultyUI() {
   const seg = $('segDiff'); if (!seg) return;
-  seg.querySelectorAll('button').forEach((b) => {
-    const v = b.dataset.diff === 'auto' ? 'auto' : +b.dataset.diff;
-    b.classList.toggle('on', state.difficulty === v);
-  });
+  seg.querySelectorAll('button').forEach((b) => b.classList.toggle('on', +b.dataset.age === state.age));
 }
 
 function refreshSettingsUI() {
@@ -678,6 +678,69 @@ function updateVoiceNote() {
 
 function openSheet() { refreshSettingsUI(); updateVoiceNote(); $('sheetBack').classList.add('open'); }
 function closeSheet() { $('sheetBack').classList.remove('open'); }
+
+/* =========================================================================
+   📊 PROGRESS REPORT — parent-facing, generated from real mastery data
+   ========================================================================= */
+function wordText(lang, id) {
+  // game items are keyed by emoji; map back to the word. test items are the word itself.
+  const w = ALL_WORDS.find((x) => x.emoji === id);
+  if (w) return spoken(w, lang) + ' ' + w.emoji;
+  return id;
+}
+
+function openReport() {
+  const langs = [['en', '🇬🇧 English'], ['zh', '🇨🇳 中文'], ['ms', '🇲🇾 Bahasa Melayu']];
+  const db = (typeof timeDB === 'function') ? timeDB() : {};
+  const totalH = (Object.values(db).reduce((a, b) => a + b, 0) / 3600).toFixed(1);
+  const days = Object.values(db).filter((s) => s >= 300).length;
+  const rw = (typeof rwState === 'function') ? rwState() : { caught: [] };
+  const today = new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+
+  const sections = langs.map(([lc, label]) => {
+    const r = progressReport(lc);
+    if (!r.seen) return `<div class="rep-lang"><h3>${label}</h3><p class="hint-line">${t('rep_notyet')}</p></div>`;
+    const review = r.toReview.map((id) => `<span class="flu-chip">${wordText(lc, id)}</span>`).join('');
+    return `
+      <div class="rep-lang">
+        <h3>${label} <span class="rep-lv">Lv ${r.level} · ${t('rep_age', { n: state.age })}</span></h3>
+        <div class="rep-bars">
+          ${repBar(t('rep_mastered'), r.mastered, r.seen, '#2E8B57')}
+          ${repBar(t('rep_strong'), r.strong, r.seen, '#6FBF73')}
+          ${repBar(t('rep_learning'), r.learning, r.seen, '#E8B84B')}
+          ${repBar(t('rep_struggling'), r.struggling, r.seen, '#D9843B')}
+        </div>
+        <div class="rep-stats">
+          <span>👀 ${t('rep_seen', { n: r.seen })}</span>
+          <span>🎯 ${r.accuracy}%</span>
+          <span>💤 ${t('rep_resting', { n: r.retiredToday })}</span>
+        </div>
+        ${review ? `<div class="rep-review"><b>${t('rep_practise_next')}</b><div class="rep-chips">${review}</div></div>` : ''}
+      </div>`;
+  }).join('');
+
+  $('reportArea').innerHTML = `
+    <div class="rep-head">
+      <div class="rep-title">${t('rep_title', { name: (typeof CHILD_NAME !== 'undefined' ? CHILD_NAME : 'Learner') })}</div>
+      <div class="rep-date">${today}</div>
+    </div>
+    <div class="rep-summary">
+      <span>🔥 ${t('rep_days', { n: days })}</span>
+      <span>📚 ${totalH} ${t('rep_hours')}</span>
+      <span>🔴 ${t('rep_caught', { n: rw.caught.length })}</span>
+    </div>
+    ${sections}
+    <button class="tp-bigstart" id="reportPrint" style="margin-top:16px">🖨️ ${t('rep_print')}</button>`;
+  $('reportPrint').addEventListener('click', () => window.print());
+  show('screen-report');
+}
+
+function repBar(label, n, total, colour) {
+  const pct = total ? Math.round(100 * n / total) : 0;
+  return `<div class="rep-bar-row"><span class="rep-bar-lbl">${label}</span>
+    <span class="rep-bar"><span class="rep-bar-fill" style="width:${pct}%;background:${colour}"></span></span>
+    <span class="rep-bar-n">${n}</span></div>`;
+}
 
 /* ---------- sound-check diagnostic: says exactly why audio is/isn't working ---------- */
 async function runSoundTest() {
@@ -743,9 +806,9 @@ function init() {
     state.font = b.dataset.font; applyFont(); saveState(); refreshSettingsUI();
   }));
   $('segDiff').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
-    state.difficulty = b.dataset.diff === 'auto' ? 'auto' : +b.dataset.diff;
-    saveState(); applyDifficultyUI();
+    state.age = +b.dataset.age; saveState(); applyDifficultyUI();
   }));
+  $('reportBtn').addEventListener('click', () => { closeSheet(); openReport(); });
 
   goHome();
 }
