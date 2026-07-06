@@ -3,8 +3,8 @@
    everything and old caches are dropped on activate. */
 importScripts('audio-manifest.js');   // AUDIO_MAP: bundled speech clips
 
-const VERSION = 'baca-v31';
-const RUNTIME = 'baca-runtime-v31';
+const VERSION = 'baca-v32';
+const RUNTIME = 'baca-runtime-v32';
 
 const CORE = [
   '.',

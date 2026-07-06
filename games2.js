@@ -50,6 +50,8 @@ function renderTrace() {
         strokeColor: '#3A352C', outlineColor: '#E3D5B3',
         drawingColor: '#1F6F8B', drawingWidth: 24,
         highlightOnComplete: true, highlightColor: '#2E8B57',
+        leniency: 1.4,                       // forgiving stroke matching for young fingers
+        acceptBackwardsStrokes: true,        // dyslexia-friendly: reversed strokes still count
         // local stroke data first (bundled, offline-safe), CDN as fallback
         charDataLoader: (char) =>
           fetch(`hanzi-data/${encodeURIComponent(char)}.json`)
@@ -68,7 +70,7 @@ function renderTrace() {
 
 function startTraceQuiz() {
   if (!traceWriter) return;
-  traceWriter.quiz({ onComplete: traceQuizDone });
+  traceWriter.quiz({ onComplete: traceQuizDone, showHintAfterMisses: 2 });   // flash the stroke when stuck
 }
 
 async function traceQuizDone(summary) {

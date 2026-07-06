@@ -175,7 +175,7 @@ function renderEjaanTiles() {
     if (tp.slots.indexOf(null) === -1) {
       const ok = tp.slots.join('') === tp.letters.join('');
       if (ok) {
-        await speak(tp.word, tp.lang);
+        speak(tp.word, tp.lang);             // fire-and-continue — never freeze the advance
         tpWordDone(!tp.wrongThisWord);
       } else {
         tp.wrongThisWord = true;
@@ -229,6 +229,8 @@ function renderTingxieChar() {
         showOutline: tp.stage === 1,                       // Copy stage traces over the outline
         strokeColor: '#3A352C', drawingColor: '#1F6F8B', drawingWidth: 24,
         highlightOnComplete: true, highlightColor: '#2E8B57',
+        leniency: tp.stage === 1 ? 1.4 : 1.8,              // memory-writing must be forgiving
+        acceptBackwardsStrokes: true,                      // dyslexia-friendly
         charDataLoader: (char) =>
           fetch(`hanzi-data/${encodeURIComponent(char)}.json`)
             .then((r) => { if (!r.ok) throw new Error('miss'); return r.json(); })
@@ -238,6 +240,7 @@ function renderTingxieChar() {
         onLoadCharDataError: () => tpFreeDraw(ch)
       });
       tp.writer.quiz({
+        showHintAfterMisses: 3,                            // engine flashes the stroke when he's stuck
         onComplete: (summary) => tpCharDone((summary && summary.totalMistakes || 0) <= 3 && !tp.hinted)
       });
       return;
