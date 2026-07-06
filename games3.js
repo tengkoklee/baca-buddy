@@ -48,6 +48,9 @@ function huntSoundText() {
 async function speakHuntSound() { await speak(huntSoundText(), hunt.lang); }
 
 async function answerHunt(el) {
+  if (answerBusy) return;
+  answerBusy = true;
+  try {
   const w = hunt.choices.find((c) => c.emoji === el.dataset.emoji);
   recordAnswer('hunt', hunt.lang, hunt.target.emoji, w.emoji === hunt.target.emoji);
   await speak(spoken(w, hunt.lang), hunt.lang);        // always read what they tapped
@@ -61,6 +64,7 @@ async function answerHunt(el) {
     await speakHuntSound();                            // replay the target sound
     ctx.streak = 0;
   }
+  } finally { answerBusy = false; }
 }
 
 /* =========================================================================
@@ -98,6 +102,8 @@ function renderFluTimes() {
 }
 
 function fluToggle() {
+  if (Date.now() - (flu.lastTap || 0) < 300) return;   // rapid-tap debounce
+  flu.lastTap = Date.now();
   if (flu.round >= 3) { fluNext(); return; }
   if (!flu.running) {
     // start the round

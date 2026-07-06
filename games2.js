@@ -137,7 +137,10 @@ function nextRadical() {
   speak(item.ch, 'zh');
 }
 
+let radGen = 0;
 function renderRadical() {
+  radGen++;
+  const gen = radGen;
   const total = rad.item.parts.length;
   $('radicalAssembly').innerHTML =
     Array.from({ length: total }, (_, i) =>
@@ -154,7 +157,7 @@ function renderRadical() {
     return `<div class="tile zh ${used ? 'used' : ''}" data-p="${p}">${p}</div>`;
   }).join('');
   $('radicalTray').querySelectorAll('.tile:not(.used)').forEach((t) => {
-    t.addEventListener('click', () => placeRadical(t));
+    t.addEventListener('click', () => { if (gen === radGen) placeRadical(t); });
   });
 }
 
@@ -208,6 +211,9 @@ function nextHomo() {
 }
 
 async function answerHomo(el) {
+  if (answerBusy) return;
+  answerBusy = true;
+  try {
   const o = homo.set.opts.find((x) => x.ch === el.dataset.ch);
   recordAnswer('homo', 'zh', homo.set.py + ':' + homo.target.ch, o.ch === homo.target.ch);
   if (o.ch === homo.target.ch) {
@@ -226,6 +232,7 @@ async function answerHomo(el) {
     speak(homo.target.ch, 'zh');
     ctx.streak = 0;
   }
+  } finally { answerBusy = false; }
 }
 
 /* =========================================================================
@@ -259,7 +266,10 @@ function nextBlend() {
 
 function w2syl(word, lang) { return lang === 'ms' ? word.ms.syl : word.en.syl; }
 
+let blendGen = 0;
 function renderBlend() {
+  blendGen++;
+  const gen = blendGen;
   $('blendSlots').innerHTML = blend.slots.map((s, i) =>
     `<div class="slot syl ${s ? 'filled' : ''}" data-i="${i}">${s || ''}</div>`).join('');
   $('blendSlots').querySelectorAll('.slot').forEach((el) => {
@@ -279,6 +289,7 @@ function renderBlend() {
   }).join('');
   $('blendTiles').querySelectorAll('.tile:not(.used)').forEach((t) => {
     t.addEventListener('click', () => {
+      if (gen !== blendGen) return;                      // stale-render click
       const i = blend.slots.indexOf(null);
       if (i === -1) return;
       blend.slots[i] = t.dataset.s;

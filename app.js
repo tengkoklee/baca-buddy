@@ -43,6 +43,9 @@ function saveState() {
   })); } catch (e) {}
 }
 
+/* one answer at a time — a kid's double-tap must not fire twice */
+let answerBusy = false;
+
 /* session-only context */
 let ctx = { mode: 'explore', theme: THEMES[0], idx: 0, streak: 0, curLang: 'en', answer: null, slots: [], target: '' };
 
@@ -466,6 +469,9 @@ function nextListen() {
 }
 
 async function answerListen(el, word) {
+  if (answerBusy) return;
+  answerBusy = true;
+  try {
   recordAnswer('listen', ctx.curLang, ctx.answer.emoji, word.emoji === ctx.answer.emoji);
   if (word.emoji === ctx.answer.emoji) {
     el.classList.add('correct');
@@ -480,6 +486,7 @@ async function answerListen(el, word) {
     speak(spoken(ctx.answer, ctx.curLang), ctx.curLang);
     ctx.streak = 0;
   }
+  } finally { answerBusy = false; }
 }
 
 /* =========================================================================
@@ -504,6 +511,9 @@ function nextMatch() {
 }
 
 async function answerMatch(el, word) {
+  if (answerBusy) return;
+  answerBusy = true;
+  try {
   recordAnswer('match', ctx.curLang, ctx.answer.emoji, word.emoji === ctx.answer.emoji);
   await speak(spoken(word, ctx.curLang), ctx.curLang);   // read whatever they tapped (multisensory)
   if (word.emoji === ctx.answer.emoji) {
@@ -516,6 +526,7 @@ async function answerMatch(el, word) {
     setTimeout(() => el.classList.remove('wrong'), 400);
     ctx.streak = 0;
   }
+  } finally { answerBusy = false; }
 }
 
 /* =========================================================================
@@ -546,7 +557,10 @@ function nextBuild() {
   setTimeout(() => {}, 0);
 }
 
+let buildGen = 0;   // bumps every render — clicks from a stale render are ignored
 function renderBuild() {
+  buildGen++;
+  const gen = buildGen;
   const target = ctx.target;
   $('buildSlots').innerHTML = target.split('').map((_, i) =>
     `<div class="slot ${ctx.slots[i] ? 'filled' : ''}" data-i="${i}">${ctx.slots[i] || ''}</div>`).join('');
@@ -568,7 +582,7 @@ function renderBuild() {
     return `<div class="tile ${isUsed ? 'used' : ''}" data-c="${c}">${c}</div>`;
   }).join('');
   $('buildTiles').querySelectorAll('.tile:not(.used)').forEach((t) => {
-    t.addEventListener('click', () => placeLetter(t.dataset.c));
+    t.addEventListener('click', () => { if (gen === buildGen) placeLetter(t.dataset.c); });
   });
 }
 

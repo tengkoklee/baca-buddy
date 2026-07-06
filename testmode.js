@@ -144,7 +144,10 @@ function renderEjaan() {
   speak(tp.word, tp.lang);
 }
 
+let tpGen = 0;
 function renderEjaanTiles() {
+  tpGen++;
+  const gen = tpGen;
   $('tpSlots').innerHTML = tp.slots.map((s, i) =>
     `<div class="slot ${s ? 'filled' : ''}" data-i="${i}">${s || ''}</div>`).join('');
   $('tpSlots').querySelectorAll('.slot').forEach((el) => el.addEventListener('click', () => {
@@ -162,6 +165,7 @@ function renderEjaanTiles() {
     return `<div class="tile ${used ? 'used' : ''}" data-c="${c}">${c}</div>`;
   }).join('');
   $('tpTiles').querySelectorAll('.tile:not(.used)').forEach((el) => el.addEventListener('click', async () => {
+    if (gen !== tpGen) return;                           // stale-render click
     const i = tp.slots.indexOf(null);
     if (i === -1) return;
     tp.slots[i] = el.dataset.c;
